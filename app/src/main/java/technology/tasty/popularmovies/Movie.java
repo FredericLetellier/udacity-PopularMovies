@@ -1,7 +1,6 @@
 package technology.tasty.popularmovies;
 
 import java.util.Date;
-import java.util.List;
 
 /**
  * Popular Movies
@@ -9,56 +8,102 @@ import java.util.List;
  */
 public class Movie{
 
+    /**
+     * Path of movie poster image
+     */
     String mPosterPath;
-    Boolean mAdult;
+    /**
+     * Overview of movie
+     */
     String mOverview;
+    /**
+     * Release date of movie
+     */
     Date mReleaseDate;
-    List<Integer> mGenreIds;
     /**
-     * Id of movie
+     * Title of movie
      */
-    int mId;
     String mOriginalTitle;
-    String mOriginalLanguage;
     /**
-     * Title Text
+     * User rating of movie
      */
-    String mTitle;
-    String mBackdropPath;
-    Double mPopularity;
-    int mVoteCount;
-    Boolean mVideo;
     Double mVoteAverage;
 
     /**
-     * Get Id
-     * @return mId
+     * Get Path of movie poster image
+     * @return mPosterPath
      */
-    public int getId() {
-        return mId;
+    public String getPosterPath() {
+        return mPosterPath;
     }
 
     /**
-     * Set Id
-     * @param id : the new resource id
+     * Set Path of movie poster image
+     * @param posterPath ; the new poster path
      */
-    public void setId(int id) {
-        mId = id;
+    public void setPosterPath(String posterPath) {
+        mPosterPath = posterPath;
     }
 
     /**
-     * Get Title
-     * @return mTitle
+     * Get Overview of movie
+     * @return mOverview
      */
-    public String getTitle() {
-        return mTitle;
+    public String getOverview() {
+        return mOverview;
     }
 
     /**
-     * Set Title
+     * Set Overview of movie
+     * @param overview ; the new overview
+     */
+    public void setOverview(String overview) { mOverview = overview; }
+
+    /**
+     * Get Release date of movie
+     * @return mReleaseDate
+     */
+    public Date getReleaseDate() {
+        return mReleaseDate;
+    }
+
+    /**
+     * Set Release date of movie
+     * @param releaseDate ; the new release date
+     */
+    public void setReleaseDate(Date releaseDate) {
+        mReleaseDate = releaseDate;
+    }
+
+    /**
+     * Get Original Title
+     * @return mOriginalTitle
+     */
+    public String getOriginalTitle() {
+        return mOriginalTitle;
+    }
+
+    /**
+     * Set Original Title
      * @param title ; the new title
      */
-    public void setTitle(String title) {
-        mTitle = title;
+    public void setOriginalTitle(String title) {
+        mOriginalTitle = title;
+    }
+
+    /**
+     * Get User rating of movie
+     * @return mVoteAverage
+     */
+    public Double getVoteAverage() {
+        return mVoteAverage;
+    }
+
+    /**
+     * Set User rating of movie
+     * @param voteAverage ; the new vote average
+     */
+    public void setVoteAverage(Double voteAverage) {
+        mVoteAverage = voteAverage;
     }
 }

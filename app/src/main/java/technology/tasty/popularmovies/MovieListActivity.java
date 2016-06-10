@@ -28,7 +28,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -118,14 +121,14 @@ public class MovieListActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
             holder.mMovie = mMovies.get(position);
-            holder.mIdView.setText(mMovies.get(position).mTitle);
+            holder.mIdView.setText(mMovies.get(position).mOriginalTitle);
 
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (mTwoPane) {
                         Bundle arguments = new Bundle();
-                        arguments.putString(MovieDetailFragment.ARG_ITEM_ID, holder.mMovie.mTitle);
+                        arguments.putString(MovieDetailFragment.ARG_ITEM_ID, holder.mMovie.mOriginalTitle);
                         MovieDetailFragment fragment = new MovieDetailFragment();
                         fragment.setArguments(arguments);
                         getSupportFragmentManager().beginTransaction()
@@ -134,7 +137,7 @@ public class MovieListActivity extends AppCompatActivity {
                     } else {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, MovieDetailActivity.class);
-                        intent.putExtra(MovieDetailFragment.ARG_ITEM_ID, holder.mMovie.mTitle);
+                        intent.putExtra(MovieDetailFragment.ARG_ITEM_ID, holder.mMovie.mOriginalTitle);
 
                         context.startActivity(intent);
                     }
@@ -184,20 +187,11 @@ public class MovieListActivity extends AppCompatActivity {
             // These are the names of the JSON objects that need to be extracted.
             final String IMDB_LIST = "results";
 
-            //final String IMDB_POSTERPATH = "poster_path";
-            //final String IMDB_ADULT = "adult";
-            //final String IMDB_OVERVIEW = "overview";
-            //final String IMDB_RELEASEDATE = "release_date";
-            //final String IMDB_GENREIDS = "genre_ids";
-            //final String IMDB_ID = "id";
+            final String IMDB_POSTERPATH = "poster_path";
+            final String IMDB_OVERVIEW = "overview";
+            final String IMDB_RELEASEDATE = "release_date";
             final String IMDB_ORIGINALTITLE = "original_title";
-            //final String IMDB_ORIGINALLANGUAGE = "original_language";
-            //final String IMDB_TITLE = "title";
-            //final String IMDB_BACKDROPPATH = "backdrop_path";
-            //final String IMDB_POPULARITY = "popularity";
-            //final String IMDB_VOTECOUNT = "vote_count";
-            //final String IMDB_VIDEO = "video";
-            //final String IMDB_VOTEAVERAGE = "vote_average";
+            final String IMDB_VOTEAVERAGE = "vote_average";
 
             JSONObject forecastJson = new JSONObject(forecastJsonStr);
             JSONArray weatherArray = forecastJson.getJSONArray(IMDB_LIST);
@@ -205,14 +199,35 @@ public class MovieListActivity extends AppCompatActivity {
             List<Movie> resultStrs = new ArrayList<>();
             for(int i = 0; i < weatherArray.length(); i++) {
                 // For now, using the format "Day, description, hi/low"
-                String title;
+                String posterPath;
+                String overview;
+                String sReleaseDate;
+                Date releaseDate;
+                String originalTitle;
+                Double voteAverage;
 
                 // Get the JSON object representing the day
                 JSONObject dayForecast = weatherArray.getJSONObject(i);
-                title = dayForecast.getString(IMDB_ORIGINALTITLE);
+                posterPath = dayForecast.getString(IMDB_POSTERPATH);
+                overview = dayForecast.getString(IMDB_OVERVIEW);
+                sReleaseDate = dayForecast.getString(IMDB_RELEASEDATE);
+                originalTitle = dayForecast.getString(IMDB_ORIGINALTITLE);
+                voteAverage = dayForecast.getDouble(IMDB_VOTEAVERAGE);
+
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+                try {
+                    releaseDate = format.parse(sReleaseDate);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    releaseDate = new Date();
+                }
 
                 Movie movie = new Movie();
-                movie.setTitle(title);
+                movie.setPosterPath(posterPath);
+                movie.setOverview(overview);
+                movie.setReleaseDate(releaseDate);
+                movie.setOriginalTitle(originalTitle);
+                movie.setVoteAverage(voteAverage);
 
                 resultStrs.add(movie);
             }
