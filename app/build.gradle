@@ -18,8 +18,17 @@ android {
         }
     }
     buildTypes.each {
-        it.buildConfigField 'String', 'OPEN_IMDB_API_KEY', '"dd1d62e43856414c6bf8e2181c50b6f6"'
+        //The API KEY MUST NOT BE PUBLISH. It is possible to generate a new one for free from www.themoviedb.org
+        //Remove before commit !!!
+        it.buildConfigField 'String', 'OPEN_IMDB_API_KEY', getMyApiKey("myApiKeyIMDB")
     }
+}
+
+//return a MY API KEY from a properties file.
+def getMyApiKey(String property){
+    Properties properties = new Properties()
+    properties.load(new FileInputStream("C:\\Workspace\\api_user\\apiKeyIMDB"))
+    return "\"" + properties.getProperty(property) +"\""
 }
 
 repositories {
