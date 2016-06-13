@@ -32,6 +32,14 @@ public class Movie implements Parcelable{
      */
     Double mVoteAverage;
 
+    public Movie(String pPosterPath, String pOverview, Date pReleaseDate, String pOriginalTitle, Double pVoteAverage){
+        this.mPosterPath = pPosterPath;
+        this.mOverview = pOverview;
+        this.mReleaseDate = pReleaseDate;
+        this.mOriginalTitle = pOriginalTitle;
+        this.mVoteAverage = pVoteAverage;
+    }
+
     /**
      * Get Path of movie poster image
      * @return mPosterPath

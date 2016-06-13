@@ -128,7 +128,7 @@ public class MovieListActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     if (mTwoPane) {
                         Bundle arguments = new Bundle();
-                        arguments.putString(MovieDetailFragment.ARG_ITEM_ID, holder.mMovie.mOriginalTitle);
+                        arguments.putParcelable(MovieDetailFragment.ARG_MOVIE, holder.mMovie);
                         MovieDetailFragment fragment = new MovieDetailFragment();
                         fragment.setArguments(arguments);
                         getSupportFragmentManager().beginTransaction()
@@ -137,7 +137,7 @@ public class MovieListActivity extends AppCompatActivity {
                     } else {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, MovieDetailActivity.class);
-                        intent.putExtra(MovieDetailFragment.ARG_ITEM_ID, holder.mMovie.mOriginalTitle);
+                        intent.putExtra(MovieDetailFragment.ARG_MOVIE, holder.mMovie);
 
                         context.startActivity(intent);
                     }
@@ -222,13 +222,7 @@ public class MovieListActivity extends AppCompatActivity {
                     releaseDate = new Date();
                 }
 
-                Movie movie = new Movie();
-                movie.setPosterPath(posterPath);
-                movie.setOverview(overview);
-                movie.setReleaseDate(releaseDate);
-                movie.setOriginalTitle(originalTitle);
-                movie.setVoteAverage(voteAverage);
-
+                Movie movie = new Movie(posterPath, overview, releaseDate, originalTitle, voteAverage);
                 resultStrs.add(movie);
             }
             return resultStrs;
