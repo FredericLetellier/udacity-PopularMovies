@@ -48,22 +48,23 @@ public class MovieDetailFragment extends Fragment {
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
             mMovie = getArguments().getParcelable(ARG_MOVIE);
-
-            Activity activity = this.getActivity();
-            CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
-            if (appBarLayout != null) {
-                appBarLayout.setTitle(mMovie.getOriginalTitle());
-                Picasso.with(getContext())
-                        .load("http://image.tmdb.org/t/p/w342/" + mMovie.getPosterPath())
-                        .fit().centerCrop()
-                        .into((ImageView) activity.findViewById(R.id.background_toolbar));
-            }
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        Activity activity = this.getActivity();
+        CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
+        if (appBarLayout != null) {
+            appBarLayout.setTitle(mMovie.getOriginalTitle());
+            Picasso.with(getContext())
+                    .load("http://image.tmdb.org/t/p/w342/" + mMovie.getPosterPath())
+                    .fit().centerCrop()
+                    .into((ImageView) activity.findViewById(R.id.background_toolbar));
+        }
+
         View rootView = inflater.inflate(R.layout.movie_detail, container, false);
 
         // Show the dummy content as text in a TextView.
