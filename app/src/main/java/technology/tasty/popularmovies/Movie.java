@@ -1,12 +1,15 @@
 package technology.tasty.popularmovies;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.Date;
 
 /**
  * Popular Movies
  * Created on 10/06/2016 by Espace de travail.
  */
-public class Movie{
+public class Movie implements Parcelable{
 
     /**
      * Path of movie poster image
@@ -105,5 +108,42 @@ public class Movie{
      */
     public void setVoteAverage(Double voteAverage) {
         mVoteAverage = voteAverage;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(mPosterPath);
+        dest.writeString(mOverview);
+        dest.writeLong(mReleaseDate.getTime());
+        dest.writeString(mOriginalTitle);
+        dest.writeDouble(mVoteAverage);
+    }
+
+    public static final Parcelable.Creator<Movie> CREATOR = new Parcelable.Creator<Movie>()
+    {
+        @Override
+        public Movie createFromParcel(Parcel source)
+        {
+            return new Movie(source);
+        }
+
+        @Override
+        public Movie[] newArray(int size)
+        {
+            return new Movie[size];
+        }
+    };
+
+    public Movie(Parcel in) {
+        this.mPosterPath = in.readString();
+        this.mOverview = in.readString();
+        this.mReleaseDate =  new Date(in.readLong());
+        this.mOriginalTitle = in.readString();
+        this.mVoteAverage = in.readDouble();
     }
 }

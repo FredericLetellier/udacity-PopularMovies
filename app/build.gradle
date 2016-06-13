@@ -18,7 +18,7 @@ android {
         }
     }
     buildTypes.each {
-        it.buildConfigField 'String', 'OPEN_IMDB_API_KEY', '""'
+        it.buildConfigField 'String', 'OPEN_IMDB_API_KEY', '"dd1d62e43856414c6bf8e2181c50b6f6"'
     }
 }
 
