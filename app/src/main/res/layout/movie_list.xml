@@ -6,8 +6,5 @@
     android:name="technology.tasty.popularmovies.MovieListFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="16dp"
-    app:layoutManager="GridLayoutManager"
     tools:context="technology.tasty.popularmovies.MovieListActivity"
     tools:listitem="@layout/movie_list_content" />

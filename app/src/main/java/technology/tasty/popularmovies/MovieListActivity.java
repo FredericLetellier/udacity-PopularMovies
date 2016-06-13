@@ -16,7 +16,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.ImageView;
+
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -121,7 +123,10 @@ public class MovieListActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
             holder.mMovie = mMovies.get(position);
-            holder.mIdView.setText(mMovies.get(position).mOriginalTitle);
+            Picasso.with(getApplicationContext())
+                    .load("http://image.tmdb.org/t/p/w185/" + holder.mMovie.getPosterPath())
+                    .fit().centerCrop()
+                    .into(holder.mPosterView);
 
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -152,20 +157,13 @@ public class MovieListActivity extends AppCompatActivity {
 
         public class ViewHolder extends RecyclerView.ViewHolder {
             public final View mView;
-            public final TextView mIdView;
-            public final TextView mContentView;
+            public final ImageView mPosterView;
             public Movie mMovie;
 
             public ViewHolder(View view) {
                 super(view);
                 mView = view;
-                mIdView = (TextView) view.findViewById(R.id.id);
-                mContentView = (TextView) view.findViewById(R.id.content);
-            }
-
-            @Override
-            public String toString() {
-                return super.toString() + " '" + mContentView.getText() + "'";
+                mPosterView = (ImageView) view.findViewById(R.id.poster);
             }
         }
     }
