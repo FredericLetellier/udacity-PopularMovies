@@ -1,9 +1,32 @@
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/movie_detail"
-    style="?android:attr/textAppearanceLarge"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:textIsSelectable="true"
-    tools:context="technology.tasty.popularmovies.MovieDetailFragment" />
+    android:layout_margin="15dp"
+    tools:context="technology.tasty.popularmovies.MovieDetailFragment">
+
+    <TextView
+        android:id="@+id/movie_date_duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="?android:attr/textAppearanceMedium"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"/>
+
+    <TextView
+        android:id="@+id/movie_voteaverage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="?android:attr/textAppearanceMedium"
+        android:layout_below="@+id/movie_date_duration"
+        android:layout_alignParentLeft="true"/>
+
+    <TextView
+        android:id="@+id/movie_detail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="?android:attr/textAppearanceSmall"
+        android:layout_below="@+id/movie_voteaverage"
+        android:layout_alignParentLeft="true"/>
+
+</RelativeLayout>

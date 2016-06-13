@@ -7,7 +7,12 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.squareup.picasso.Picasso;
+
+import java.text.SimpleDateFormat;
 
 /**
  * A fragment representing a single Movie detail screen.
@@ -48,6 +53,10 @@ public class MovieDetailFragment extends Fragment {
             CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
             if (appBarLayout != null) {
                 appBarLayout.setTitle(mMovie.getOriginalTitle());
+                Picasso.with(getContext())
+                        .load("http://image.tmdb.org/t/p/w342/" + mMovie.getPosterPath())
+                        .fit().centerCrop()
+                        .into((ImageView) activity.findViewById(R.id.background_toolbar));
             }
         }
     }
@@ -59,6 +68,9 @@ public class MovieDetailFragment extends Fragment {
 
         // Show the dummy content as text in a TextView.
         if (mMovie != null) {
+            SimpleDateFormat simpleDate =  new SimpleDateFormat("dd MMM yyyy");
+            ((TextView) rootView.findViewById(R.id.movie_date_duration)).setText(simpleDate.format(mMovie.getReleaseDate()));
+            ((TextView) rootView.findViewById(R.id.movie_voteaverage)).setText(String.valueOf(mMovie.getVoteAverage())+"/10");
             ((TextView) rootView.findViewById(R.id.movie_detail)).setText(mMovie.getOverview());
         }
 
