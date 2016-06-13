@@ -100,7 +100,8 @@ public class MovieListActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
-        recyclerView.setLayoutManager(new GridLayoutManager(recyclerView.getContext(), 2));
+        final int columns = getResources().getInteger(R.integer.grid_columns);
+        recyclerView.setLayoutManager(new GridLayoutManager(recyclerView.getContext(), columns));
         recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(new ArrayList<Movie>()));
     }
 
