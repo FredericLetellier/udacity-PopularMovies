@@ -35,6 +35,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * An activity representing a list of Movies. This activity
@@ -52,7 +53,7 @@ public class MovieListActivity extends AppCompatActivity {
      */
     private boolean mTwoPane;
 
-    RecyclerView recyclerView;
+    private RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,16 +62,20 @@ public class MovieListActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setTitle(getTitle());
+        if (toolbar != null) {
+            toolbar.setTitle(getTitle());
+        }
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        if (fab != null) {
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                }
+            });
+        }
 
         recyclerView = (RecyclerView) findViewById(R.id.movie_list);
         assert recyclerView != null;
@@ -86,11 +91,8 @@ public class MovieListActivity extends AppCompatActivity {
     }
 
     private void updateWeather() {
-        FetchWeatherTask weatherTask = new FetchWeatherTask();
-        //SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        //String location = prefs.getString(getString(R.string.pref_location_key),
-                //getString(R.string.pref_location_default));
-        weatherTask.execute();
+        FetchIMDBTask imdbTask = new FetchIMDBTask();
+        imdbTask.execute();
     }
 
     @Override
@@ -169,9 +171,9 @@ public class MovieListActivity extends AppCompatActivity {
         }
     }
 
-    public class FetchWeatherTask extends AsyncTask<String, Void, List<Movie>> {
+    public class FetchIMDBTask extends AsyncTask<String, Void, List<Movie>> {
 
-        private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
+        private final String LOG_TAG = FetchIMDBTask.class.getSimpleName();
 
         /**
          * Take the String representing the complete forecast in JSON Format and
@@ -180,7 +182,7 @@ public class MovieListActivity extends AppCompatActivity {
          * Fortunately parsing is easy:  constructor takes the JSON string and converts it
          * into an Object hierarchy for us.
          */
-        private List<Movie> getWeatherDataFromJson(String forecastJsonStr)
+        private List<Movie> getIMDBDataFromJson(String forecastJsonStr)
                 throws JSONException {
 
             // These are the names of the JSON objects that need to be extracted.
@@ -193,11 +195,10 @@ public class MovieListActivity extends AppCompatActivity {
             final String IMDB_VOTEAVERAGE = "vote_average";
 
             JSONObject forecastJson = new JSONObject(forecastJsonStr);
-            JSONArray weatherArray = forecastJson.getJSONArray(IMDB_LIST);
+            JSONArray movieArray = forecastJson.getJSONArray(IMDB_LIST);
 
             List<Movie> resultStrs = new ArrayList<>();
-            for(int i = 0; i < weatherArray.length(); i++) {
-                // For now, using the format "Day, description, hi/low"
+            for(int i = 0; i < movieArray.length(); i++) {
                 String posterPath;
                 String overview;
                 String sReleaseDate;
@@ -205,15 +206,15 @@ public class MovieListActivity extends AppCompatActivity {
                 String originalTitle;
                 Double voteAverage;
 
-                // Get the JSON object representing the day
-                JSONObject dayForecast = weatherArray.getJSONObject(i);
+                // Get the JSON object representing the movie
+                JSONObject dayForecast = movieArray.getJSONObject(i);
                 posterPath = dayForecast.getString(IMDB_POSTERPATH);
                 overview = dayForecast.getString(IMDB_OVERVIEW);
                 sReleaseDate = dayForecast.getString(IMDB_RELEASEDATE);
                 originalTitle = dayForecast.getString(IMDB_ORIGINALTITLE);
                 voteAverage = dayForecast.getDouble(IMDB_VOTEAVERAGE);
 
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.FRENCH);
                 try {
                     releaseDate = format.parse(sReleaseDate);
                 } catch (ParseException e) {
@@ -230,11 +231,6 @@ public class MovieListActivity extends AppCompatActivity {
         @Override
         protected List<Movie> doInBackground(String... params) {
 
-            // If there's no zip code, there's nothing to look up.  Verify size of params.
-            if (params.length == 0) {
-                //return null;
-            }
-
             // These two need to be declared outside the try/catch
             // so that they can be closed in the finally block.
             HttpURLConnection urlConnection = null;
@@ -244,9 +240,9 @@ public class MovieListActivity extends AppCompatActivity {
             String forecastJsonStr = null;
 
             try {
-                // Construct the URL for the OpenWeatherMap query
-                // Possible parameters are avaiable at OWM's forecast API page, at
-                // http://openweathermap.org/API#forecast
+                // Construct the URL for the IMDB query
+                // Possible parameters are available at IMDB API page, at
+                // http://docs.themoviedb.apiary.io/
                 final String FORECAST_BASE_URL =
                         "http://api.themoviedb.org/3/movie/popular?";
                 final String APIKEY_PARAM = "api_key";
@@ -257,14 +253,14 @@ public class MovieListActivity extends AppCompatActivity {
 
                 URL url = new URL(builtUri.toString());
 
-                // Create the request to OpenWeatherMap, and open the connection
+                // Create the request to IMDB, and open the connection
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
 
                 // Read the input stream into a String
                 InputStream inputStream = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
+                StringBuilder buffer = new StringBuilder();
                 if (inputStream == null) {
                     // Nothing to do.
                     return null;
@@ -276,7 +272,7 @@ public class MovieListActivity extends AppCompatActivity {
                     // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
                     // But it does make debugging a *lot* easier if you print out the completed
                     // buffer for debugging.
-                    buffer.append(line + "\n");
+                    buffer.append(line).append("\n");
                 }
 
                 if (buffer.length() == 0) {
@@ -286,7 +282,7 @@ public class MovieListActivity extends AppCompatActivity {
                 forecastJsonStr = buffer.toString();
             } catch (IOException e) {
                 Log.e(LOG_TAG, "Error ", e);
-                // If the code didn't successfully get the weather data, there's no point in attemping
+                // If the code didn't successfully get the movie data, there's no point in attemping
                 // to parse it.
                 return null;
             } finally {
@@ -303,7 +299,7 @@ public class MovieListActivity extends AppCompatActivity {
             }
 
             try {
-                return getWeatherDataFromJson(forecastJsonStr);
+                return getIMDBDataFromJson(forecastJsonStr);
             } catch (JSONException e) {
                 Log.e(LOG_TAG, e.getMessage(), e);
                 e.printStackTrace();

@@ -14,23 +14,23 @@ public class Movie implements Parcelable{
     /**
      * Path of movie poster image
      */
-    String mPosterPath;
+    private String mPosterPath;
     /**
      * Overview of movie
      */
-    String mOverview;
+    private String mOverview;
     /**
      * Release date of movie
      */
-    Date mReleaseDate;
+    private Date mReleaseDate;
     /**
      * Title of movie
      */
-    String mOriginalTitle;
+    private String mOriginalTitle;
     /**
      * User rating of movie
      */
-    Double mVoteAverage;
+    private Double mVoteAverage;
 
     public Movie(String pPosterPath, String pOverview, Date pReleaseDate, String pOriginalTitle, Double pVoteAverage){
         this.mPosterPath = pPosterPath;
@@ -49,14 +49,6 @@ public class Movie implements Parcelable{
     }
 
     /**
-     * Set Path of movie poster image
-     * @param posterPath ; the new poster path
-     */
-    public void setPosterPath(String posterPath) {
-        mPosterPath = posterPath;
-    }
-
-    /**
      * Get Overview of movie
      * @return mOverview
      */
@@ -65,25 +57,11 @@ public class Movie implements Parcelable{
     }
 
     /**
-     * Set Overview of movie
-     * @param overview ; the new overview
-     */
-    public void setOverview(String overview) { mOverview = overview; }
-
-    /**
      * Get Release date of movie
      * @return mReleaseDate
      */
     public Date getReleaseDate() {
         return mReleaseDate;
-    }
-
-    /**
-     * Set Release date of movie
-     * @param releaseDate ; the new release date
-     */
-    public void setReleaseDate(Date releaseDate) {
-        mReleaseDate = releaseDate;
     }
 
     /**
@@ -95,27 +73,11 @@ public class Movie implements Parcelable{
     }
 
     /**
-     * Set Original Title
-     * @param title ; the new title
-     */
-    public void setOriginalTitle(String title) {
-        mOriginalTitle = title;
-    }
-
-    /**
      * Get User rating of movie
      * @return mVoteAverage
      */
     public Double getVoteAverage() {
         return mVoteAverage;
-    }
-
-    /**
-     * Set User rating of movie
-     * @param voteAverage ; the new vote average
-     */
-    public void setVoteAverage(Double voteAverage) {
-        mVoteAverage = voteAverage;
     }
 
     @Override

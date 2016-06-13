@@ -13,6 +13,7 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
+import java.util.Locale;
 
 /**
  * A fragment representing a single Movie detail screen.
@@ -69,9 +70,10 @@ public class MovieDetailFragment extends Fragment {
 
         // Show the dummy content as text in a TextView.
         if (mMovie != null) {
-            SimpleDateFormat simpleDate =  new SimpleDateFormat("dd MMM yyyy");
+            SimpleDateFormat simpleDate =  new SimpleDateFormat("dd MMM yyyy", Locale.FRENCH);
             ((TextView) rootView.findViewById(R.id.movie_date_duration)).setText(simpleDate.format(mMovie.getReleaseDate()));
-            ((TextView) rootView.findViewById(R.id.movie_voteaverage)).setText(String.valueOf(mMovie.getVoteAverage())+"/10");
+            String voteaverage = String.valueOf(mMovie.getVoteAverage())+"/10";
+            ((TextView) rootView.findViewById(R.id.movie_voteaverage)).setText(voteaverage);
             ((TextView) rootView.findViewById(R.id.movie_detail)).setText(mMovie.getOverview());
         }
 

@@ -11,7 +11,8 @@
         android:layout_height="wrap_content"
         style="?android:attr/textAppearanceMedium"
         android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"/>
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"/>
 
     <TextView
         android:id="@+id/movie_voteaverage"
@@ -19,7 +20,8 @@
         android:layout_height="wrap_content"
         style="?android:attr/textAppearanceMedium"
         android:layout_below="@+id/movie_date_duration"
-        android:layout_alignParentLeft="true"/>
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"/>
 
     <TextView
         android:id="@+id/movie_detail"
@@ -27,6 +29,7 @@
         android:layout_height="wrap_content"
         style="?android:attr/textAppearanceSmall"
         android:layout_below="@+id/movie_voteaverage"
-        android:layout_alignParentLeft="true"/>
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"/>
 
 </RelativeLayout>
