@@ -6,14 +6,14 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -55,6 +55,8 @@ public class MovieListActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
 
+    private String sortOrder;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,17 +66,6 @@ public class MovieListActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         if (toolbar != null) {
             toolbar.setTitle(getTitle());
-        }
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        if (fab != null) {
-            fab.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
-                }
-            });
         }
 
         recyclerView = (RecyclerView) findViewById(R.id.movie_list);
@@ -90,7 +81,7 @@ public class MovieListActivity extends AppCompatActivity {
         }
     }
 
-    private void updateWeather() {
+    private void updateMovies() {
         FetchIMDBTask imdbTask = new FetchIMDBTask();
         imdbTask.execute();
     }
@@ -98,7 +89,37 @@ public class MovieListActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-        updateWeather();
+        if (sortOrder == null){
+            sortOrder = "popular";
+        }
+        updateMovies();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main_toolbar, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.menuSortMostPopular) {
+            sortOrder = "popular";
+            updateMovies();
+            return true;
+        }else if (id == R.id.menuSortHighestRated) {
+            sortOrder = "top_rated";
+            updateMovies();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
@@ -176,13 +197,13 @@ public class MovieListActivity extends AppCompatActivity {
         private final String LOG_TAG = FetchIMDBTask.class.getSimpleName();
 
         /**
-         * Take the String representing the complete forecast in JSON Format and
+         * Take the String representing the complete imdb movies in JSON Format and
          * pull out the data we need to construct the Strings needed for the wireframes.
          *
          * Fortunately parsing is easy:  constructor takes the JSON string and converts it
          * into an Object hierarchy for us.
          */
-        private List<Movie> getIMDBDataFromJson(String forecastJsonStr)
+        private List<Movie> getIMDBDataFromJson(String imdbJsonStr)
                 throws JSONException {
 
             // These are the names of the JSON objects that need to be extracted.
@@ -194,8 +215,8 @@ public class MovieListActivity extends AppCompatActivity {
             final String IMDB_ORIGINALTITLE = "original_title";
             final String IMDB_VOTEAVERAGE = "vote_average";
 
-            JSONObject forecastJson = new JSONObject(forecastJsonStr);
-            JSONArray movieArray = forecastJson.getJSONArray(IMDB_LIST);
+            JSONObject imdbJson = new JSONObject(imdbJsonStr);
+            JSONArray movieArray = imdbJson.getJSONArray(IMDB_LIST);
 
             List<Movie> resultStrs = new ArrayList<>();
             for(int i = 0; i < movieArray.length(); i++) {
@@ -207,12 +228,12 @@ public class MovieListActivity extends AppCompatActivity {
                 Double voteAverage;
 
                 // Get the JSON object representing the movie
-                JSONObject dayForecast = movieArray.getJSONObject(i);
-                posterPath = dayForecast.getString(IMDB_POSTERPATH);
-                overview = dayForecast.getString(IMDB_OVERVIEW);
-                sReleaseDate = dayForecast.getString(IMDB_RELEASEDATE);
-                originalTitle = dayForecast.getString(IMDB_ORIGINALTITLE);
-                voteAverage = dayForecast.getDouble(IMDB_VOTEAVERAGE);
+                JSONObject movieIMDB = movieArray.getJSONObject(i);
+                posterPath = movieIMDB.getString(IMDB_POSTERPATH);
+                overview = movieIMDB.getString(IMDB_OVERVIEW);
+                sReleaseDate = movieIMDB.getString(IMDB_RELEASEDATE);
+                originalTitle = movieIMDB.getString(IMDB_ORIGINALTITLE);
+                voteAverage = movieIMDB.getDouble(IMDB_VOTEAVERAGE);
 
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.FRENCH);
                 try {
@@ -237,21 +258,27 @@ public class MovieListActivity extends AppCompatActivity {
             BufferedReader reader = null;
 
             // Will contain the raw JSON response as a string.
-            String forecastJsonStr = null;
+            String imdbJsonStr = null;
 
             try {
                 // Construct the URL for the IMDB query
                 // Possible parameters are available at IMDB API page, at
                 // http://docs.themoviedb.apiary.io/
-                final String FORECAST_BASE_URL =
-                        "http://api.themoviedb.org/3/movie/popular?";
+                final String IMDB_SCHEME_URL = "http";
+                final String IMDB_AUTHORITY_URL = "api.themoviedb.org";
+                final String IMDB_PATH_VERSION_URL = "3";
+                final String IMDB_PATH_MOVIE_URL = "movie";
                 final String APIKEY_PARAM = "api_key";
 
-                Uri builtUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
-                        .appendQueryParameter(APIKEY_PARAM, BuildConfig.OPEN_IMDB_API_KEY)
-                        .build();
+                Uri.Builder builder = new Uri.Builder();
+                builder.scheme(IMDB_SCHEME_URL)
+                        .authority(IMDB_AUTHORITY_URL)
+                        .appendPath(IMDB_PATH_VERSION_URL)
+                        .appendPath(IMDB_PATH_MOVIE_URL)
+                        .appendPath(sortOrder)
+                        .appendQueryParameter(APIKEY_PARAM, BuildConfig.OPEN_IMDB_API_KEY);
 
-                URL url = new URL(builtUri.toString());
+                URL url = new URL(builder.build().toString());
 
                 // Create the request to IMDB, and open the connection
                 urlConnection = (HttpURLConnection) url.openConnection();
@@ -279,7 +306,7 @@ public class MovieListActivity extends AppCompatActivity {
                     // Stream was empty.  No point in parsing.
                     return null;
                 }
-                forecastJsonStr = buffer.toString();
+                imdbJsonStr = buffer.toString();
             } catch (IOException e) {
                 Log.e(LOG_TAG, "Error ", e);
                 // If the code didn't successfully get the movie data, there's no point in attemping
@@ -299,13 +326,13 @@ public class MovieListActivity extends AppCompatActivity {
             }
 
             try {
-                return getIMDBDataFromJson(forecastJsonStr);
+                return getIMDBDataFromJson(imdbJsonStr);
             } catch (JSONException e) {
                 Log.e(LOG_TAG, e.getMessage(), e);
                 e.printStackTrace();
             }
 
-            // This will only happen if there was an error getting or parsing the forecast.
+            // This will only happen if there was an error getting or parsing the imdb.
             return null;
         }
 

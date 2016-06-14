@@ -14,23 +14,23 @@ public class Movie implements Parcelable{
     /**
      * Path of movie poster image
      */
-    private String mPosterPath;
+    private final String mPosterPath;
     /**
      * Overview of movie
      */
-    private String mOverview;
+    private final String mOverview;
     /**
      * Release date of movie
      */
-    private Date mReleaseDate;
+    private final Date mReleaseDate;
     /**
      * Title of movie
      */
-    private String mOriginalTitle;
+    private final String mOriginalTitle;
     /**
      * User rating of movie
      */
-    private Double mVoteAverage;
+    private final Double mVoteAverage;
 
     public Movie(String pPosterPath, String pOverview, Date pReleaseDate, String pOriginalTitle, Double pVoteAverage){
         this.mPosterPath = pPosterPath;
@@ -109,7 +109,7 @@ public class Movie implements Parcelable{
         }
     };
 
-    public Movie(Parcel in) {
+    private Movie(Parcel in) {
         this.mPosterPath = in.readString();
         this.mOverview = in.readString();
         this.mReleaseDate =  new Date(in.readLong());
