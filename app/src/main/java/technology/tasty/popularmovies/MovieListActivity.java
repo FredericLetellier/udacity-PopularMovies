@@ -1,41 +1,18 @@
 package technology.tasty.popularmovies;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.widget.Toast;
 
-import com.squareup.picasso.Picasso;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * An activity representing a list of Movies. This activity
@@ -45,7 +22,7 @@ import java.util.Locale;
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class MovieListActivity extends AppCompatActivity {
+public class MovieListActivity extends AppCompatActivity implements AsyncResponse {
 
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
@@ -82,8 +59,25 @@ public class MovieListActivity extends AppCompatActivity {
     }
 
     private void updateMovies() {
-        FetchIMDBTask imdbTask = new FetchIMDBTask();
-        imdbTask.execute();
+        Context context = getApplicationContext();
+
+        if (Utility.isOnline(context)){
+            FetchIMDBTask imdbTask = new FetchIMDBTask();
+            imdbTask.delegate = this;
+            imdbTask.execute(sortOrder);
+        }else{
+            CharSequence text = "No Internet Connection";
+            int duration = Toast.LENGTH_SHORT;
+            Toast toast = Toast.makeText(context, text, duration);
+            toast.show();
+        }
+    }
+
+    //this override the implemented method from asyncTask
+    public void processFinish(List<Movie> result) {
+        //Here you will receive the result fired from async class
+        //of onPostExecute(result) method.
+        recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(getApplicationContext(), result, mTwoPane));
     }
 
     @Override
@@ -125,224 +119,7 @@ public class MovieListActivity extends AppCompatActivity {
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
         final int columns = getResources().getInteger(R.integer.grid_columns);
         recyclerView.setLayoutManager(new GridLayoutManager(recyclerView.getContext(), columns));
-        recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(new ArrayList<Movie>()));
+        recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(getApplicationContext(), new ArrayList<Movie>(), mTwoPane));
     }
 
-    public class SimpleItemRecyclerViewAdapter
-            extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {
-
-        private final List<Movie> mMovies;
-
-        public SimpleItemRecyclerViewAdapter(List<Movie> movies) {
-            mMovies = movies;
-        }
-
-        @Override
-        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.movie_list_content, parent, false);
-            return new ViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(final ViewHolder holder, int position) {
-            holder.mMovie = mMovies.get(position);
-            Picasso.with(getApplicationContext())
-                    .load("http://image.tmdb.org/t/p/w185/" + holder.mMovie.getPosterPath())
-                    .fit().centerCrop()
-                    .into(holder.mPosterView);
-
-            holder.mView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (mTwoPane) {
-                        Bundle arguments = new Bundle();
-                        arguments.putParcelable(MovieDetailFragment.ARG_MOVIE, holder.mMovie);
-                        MovieDetailFragment fragment = new MovieDetailFragment();
-                        fragment.setArguments(arguments);
-                        getSupportFragmentManager().beginTransaction()
-                                .replace(R.id.movie_detail_container, fragment)
-                                .commit();
-                    } else {
-                        Context context = v.getContext();
-                        Intent intent = new Intent(context, MovieDetailActivity.class);
-                        intent.putExtra(MovieDetailFragment.ARG_MOVIE, holder.mMovie);
-
-                        context.startActivity(intent);
-                    }
-                }
-            });
-        }
-
-        @Override
-        public int getItemCount() {
-            return mMovies.size();
-        }
-
-        public class ViewHolder extends RecyclerView.ViewHolder {
-            public final View mView;
-            public final ImageView mPosterView;
-            public Movie mMovie;
-
-            public ViewHolder(View view) {
-                super(view);
-                mView = view;
-                mPosterView = (ImageView) view.findViewById(R.id.poster);
-            }
-        }
-    }
-
-    public class FetchIMDBTask extends AsyncTask<String, Void, List<Movie>> {
-
-        private final String LOG_TAG = FetchIMDBTask.class.getSimpleName();
-
-        /**
-         * Take the String representing the complete imdb movies in JSON Format and
-         * pull out the data we need to construct the Strings needed for the wireframes.
-         *
-         * Fortunately parsing is easy:  constructor takes the JSON string and converts it
-         * into an Object hierarchy for us.
-         */
-        private List<Movie> getIMDBDataFromJson(String imdbJsonStr)
-                throws JSONException {
-
-            // These are the names of the JSON objects that need to be extracted.
-            final String IMDB_LIST = "results";
-
-            final String IMDB_POSTERPATH = "poster_path";
-            final String IMDB_OVERVIEW = "overview";
-            final String IMDB_RELEASEDATE = "release_date";
-            final String IMDB_ORIGINALTITLE = "original_title";
-            final String IMDB_VOTEAVERAGE = "vote_average";
-
-            JSONObject imdbJson = new JSONObject(imdbJsonStr);
-            JSONArray movieArray = imdbJson.getJSONArray(IMDB_LIST);
-
-            List<Movie> resultStrs = new ArrayList<>();
-            for(int i = 0; i < movieArray.length(); i++) {
-                String posterPath;
-                String overview;
-                String sReleaseDate;
-                Date releaseDate;
-                String originalTitle;
-                Double voteAverage;
-
-                // Get the JSON object representing the movie
-                JSONObject movieIMDB = movieArray.getJSONObject(i);
-                posterPath = movieIMDB.getString(IMDB_POSTERPATH);
-                overview = movieIMDB.getString(IMDB_OVERVIEW);
-                sReleaseDate = movieIMDB.getString(IMDB_RELEASEDATE);
-                originalTitle = movieIMDB.getString(IMDB_ORIGINALTITLE);
-                voteAverage = movieIMDB.getDouble(IMDB_VOTEAVERAGE);
-
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.FRENCH);
-                try {
-                    releaseDate = format.parse(sReleaseDate);
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                    releaseDate = new Date();
-                }
-
-                Movie movie = new Movie(posterPath, overview, releaseDate, originalTitle, voteAverage);
-                resultStrs.add(movie);
-            }
-            return resultStrs;
-
-        }
-        @Override
-        protected List<Movie> doInBackground(String... params) {
-
-            // These two need to be declared outside the try/catch
-            // so that they can be closed in the finally block.
-            HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
-
-            // Will contain the raw JSON response as a string.
-            String imdbJsonStr = null;
-
-            try {
-                // Construct the URL for the IMDB query
-                // Possible parameters are available at IMDB API page, at
-                // http://docs.themoviedb.apiary.io/
-                final String IMDB_SCHEME_URL = "http";
-                final String IMDB_AUTHORITY_URL = "api.themoviedb.org";
-                final String IMDB_PATH_VERSION_URL = "3";
-                final String IMDB_PATH_MOVIE_URL = "movie";
-                final String APIKEY_PARAM = "api_key";
-
-                Uri.Builder builder = new Uri.Builder();
-                builder.scheme(IMDB_SCHEME_URL)
-                        .authority(IMDB_AUTHORITY_URL)
-                        .appendPath(IMDB_PATH_VERSION_URL)
-                        .appendPath(IMDB_PATH_MOVIE_URL)
-                        .appendPath(sortOrder)
-                        .appendQueryParameter(APIKEY_PARAM, BuildConfig.OPEN_IMDB_API_KEY);
-
-                URL url = new URL(builder.build().toString());
-
-                // Create the request to IMDB, and open the connection
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-
-                // Read the input stream into a String
-                InputStream inputStream = urlConnection.getInputStream();
-                StringBuilder buffer = new StringBuilder();
-                if (inputStream == null) {
-                    // Nothing to do.
-                    return null;
-                }
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
-                    // But it does make debugging a *lot* easier if you print out the completed
-                    // buffer for debugging.
-                    buffer.append(line).append("\n");
-                }
-
-                if (buffer.length() == 0) {
-                    // Stream was empty.  No point in parsing.
-                    return null;
-                }
-                imdbJsonStr = buffer.toString();
-            } catch (IOException e) {
-                Log.e(LOG_TAG, "Error ", e);
-                // If the code didn't successfully get the movie data, there's no point in attemping
-                // to parse it.
-                return null;
-            } finally {
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (final IOException e) {
-                        Log.e(LOG_TAG, "Error closing stream", e);
-                    }
-                }
-            }
-
-            try {
-                return getIMDBDataFromJson(imdbJsonStr);
-            } catch (JSONException e) {
-                Log.e(LOG_TAG, e.getMessage(), e);
-                e.printStackTrace();
-            }
-
-            // This will only happen if there was an error getting or parsing the imdb.
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(List<Movie> result) {
-            if (result != null) {
-                recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(result));
-
-                // New data is back from the server.  Hooray!
-            }
-        }
-    }
 }

@@ -7,7 +7,6 @@
     <ImageView
         android:id="@+id/poster"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:contentDescription="@string/title_movie"/>
+        android:layout_height="match_parent"/>
 
 </RelativeLayout>
