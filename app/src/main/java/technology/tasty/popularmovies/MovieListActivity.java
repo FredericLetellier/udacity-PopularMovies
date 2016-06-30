@@ -1,6 +1,7 @@
 package technology.tasty.popularmovies;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -112,6 +113,9 @@ public class MovieListActivity extends AppCompatActivity implements AsyncRespons
             sortOrder = "top_rated";
             updateMovies();
             return true;
+        }else if (id == R.id.action_settings) {
+                startActivity(new Intent(this, SettingsActivity.class));
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }

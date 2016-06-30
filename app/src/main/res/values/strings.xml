@@ -3,9 +3,13 @@
     <string name="title_movie">Movie Title</string>
     <string name="title_movie_detail">Movie Detail</string>
     <string name="movie_poster">Movie Poster</string>
+
     <string name="action_sort">Sort</string>
     <string name="menuSortMostPopular">Sort by most popular</string>
     <string name="menuSortHighestRated">Sort by highest rated</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_settings">Settings</string>
 
     <!-- SyncAdapter related -->
     <string name="sync_account_type">popularmovies.tasty.technology</string>
