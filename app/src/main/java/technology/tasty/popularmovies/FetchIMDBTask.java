@@ -25,6 +25,16 @@ import java.util.Locale;
  * Popular Movies
  * Created on 24/06/2016 by Espace de travail.
  */
+
+
+/*
+http://api.themoviedb.org/3/movie/popular?api_key=dd1d62e43856414c6bf8e2181c50b6f6
+http://api.themoviedb.org/3/movie/top_rated?api_key=dd1d62e43856414c6bf8e2181c50b6f6
+http://image.tmdb.org/t/p/w185//nBNZadXqJSdt05SHLqgT0HuC5Gm.jpg
+http://api.themoviedb.org/3/movie/315465/videos?api_key=dd1d62e43856414c6bf8e2181c50b6f6
+http://api.themoviedb.org/3/movie/315465/reviews?api_key=dd1d62e43856414c6bf8e2181c50b6f6
+ */
+
 public class FetchIMDBTask extends AsyncTask<String, Void, List<Movie>> {
 
     private final String LOG_TAG = FetchIMDBTask.class.getSimpleName();
