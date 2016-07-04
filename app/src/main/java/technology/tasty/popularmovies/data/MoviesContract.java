@@ -50,6 +50,8 @@ public class MoviesContract {
         public static final String COLUMN_VOTEAVERAGE = "vote_average";
 
         public static final String COLUMN_OLDDATA = "old_data";
+        public static final String COLUMN_STREAM_POPULAR = "stream_popular";
+        public static final String COLUMN_STREAM_TOPRATED = "stream_toprated";
 
         public static final String COLUMN_BOOKMARK = "bookmark";
 

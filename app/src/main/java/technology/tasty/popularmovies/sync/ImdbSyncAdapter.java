@@ -1,6 +1,7 @@
 package technology.tasty.popularmovies.sync;
 
 import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.AbstractThreadedSyncAdapter;
@@ -89,20 +90,20 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
 
-        /*Mark bookmarked movies as old data*/
+        /*Mark all movies as old data*/
         ContentValues movieValues = new ContentValues();
         movieValues.put(MoviesContract.MoviesEntry.COLUMN_OLDDATA, 1);
 
         getContext().getContentResolver().update(
                 MoviesContract.MoviesEntry.CONTENT_URI,
                 movieValues,
-                MoviesContract.MoviesEntry.COLUMN_BOOKMARK + " = ?",
-                new String[] {"1"});
+                null,
+                null);
 
         /*Sync popular and top_rated movies*/
         /*If contains Bookmark movies, data are replaced, and mark as not old data*/
-        ImdbSync(SYNC_POPULAR, 0, 1);
-        ImdbSync(SYNC_TOPRATED, 0, 1);
+        ImdbSync(SYNC_POPULAR, null, 1);
+        ImdbSync(SYNC_TOPRATED, null, 1);
 
         /*Delete all reviews and videos*/
         getContext().getContentResolver().delete(
@@ -115,17 +116,17 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
                 null,
                 null);
 
-        /*Delete all movies without bookmark*/
+        /*Delete all movies without bookmark flag, and with olddata flag*/
         getContext().getContentResolver().delete(
                 MoviesContract.MoviesEntry.CONTENT_URI,
-                MoviesContract.MoviesEntry.COLUMN_BOOKMARK + " = ?",
-                new String[] {"0"});
+                MoviesContract.MoviesEntry.COLUMN_BOOKMARK + " = ? AND " + MoviesContract.MoviesEntry.COLUMN_OLDDATA + " = ?",
+                new String[] {"0", "1"});
 
         /*Notify user with actual popular movies*/
         notifyMovies();
     }
 
-    public void ImdbSync(String mode, long id, Integer page){
+    public void ImdbSync(String mode, String id, Integer page){
         // These two need to be declared outside the try/catch
         // so that they can be closed in the finally block.
         HttpURLConnection urlConnection = null;
@@ -166,16 +167,16 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
                     break;
                 }
                 case SYNC_MOVIE: {
-                    builder.appendPath(String.valueOf(id));
+                    builder.appendPath(id);
                     break;
                 }
                 case SYNC_MOVIE_VIDEOS: {
-                    builder.appendPath(String.valueOf(id))
+                    builder.appendPath(id)
                             .appendPath(IMDB_PATH_VIDEOS);
                     break;
                 }
                 case SYNC_MOVIE_REVIEWS: {
-                    builder.appendPath(String.valueOf(id))
+                    builder.appendPath(id)
                             .appendPath(IMDB_PATH_REVIEWS);
                     break;
                 }
@@ -218,7 +219,7 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
                 default:
                 case SYNC_POPULAR:
                 case SYNC_TOPRATED: {
-                    getMoviesDataFromJson(imdbJsonStr);
+                    getMoviesDataFromJson(imdbJsonStr, mode);
                     break;
                 }
                 case SYNC_MOVIE: {
@@ -256,7 +257,7 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
-    private void getMoviesDataFromJson(String imdbJsonStr)
+    private void getMoviesDataFromJson(String imdbJsonStr, String mode)
             throws JSONException {
 
         // These are the names of the JSON objects that need to be extracted.
@@ -267,6 +268,7 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
         final String IMDB_MOVIE_OVERVIEW = "overview";
         final String IMDB_MOVIE_RELEASEDATE = "release_date";
         final String IMDB_MOVIE_ORIGINALTITLE = "original_title";
+        final String IMDB_MOVIE_POPULARITY = "popularity";
         final String IMDB_MOVIE_VOTEAVERAGE = "vote_average";
 
         try {
@@ -282,6 +284,7 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
                 String sReleaseDate;
                 Date releaseDate;
                 String originalTitle;
+                Double popularity;
                 Double voteAverage;
 
                 // Get the JSON object representing the movie
@@ -291,6 +294,7 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
                 overview = movieIMDB.getString(IMDB_MOVIE_OVERVIEW);
                 sReleaseDate = movieIMDB.getString(IMDB_MOVIE_RELEASEDATE);
                 originalTitle = movieIMDB.getString(IMDB_MOVIE_ORIGINALTITLE);
+                popularity = movieIMDB.getDouble(IMDB_MOVIE_POPULARITY);
                 voteAverage = movieIMDB.getDouble(IMDB_MOVIE_VOTEAVERAGE);
 
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -308,8 +312,24 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
                 movieValues.put(MoviesContract.MoviesEntry.COLUMN_OVERVIEW, overview);
                 movieValues.put(MoviesContract.MoviesEntry.COLUMN_RELEASEDATE, String.valueOf(releaseDate));
                 movieValues.put(MoviesContract.MoviesEntry.COLUMN_ORIGINALTITLE, originalTitle);
+                movieValues.put(MoviesContract.MoviesEntry.COLUMN_POPULARITY, popularity);
                 movieValues.put(MoviesContract.MoviesEntry.COLUMN_VOTEAVERAGE, voteAverage);
                 movieValues.put(MoviesContract.MoviesEntry.COLUMN_OLDDATA, 0);
+
+                switch (mode) {
+                    default:
+                    case SYNC_POPULAR:
+                    {
+                        movieValues.put(MoviesContract.MoviesEntry.COLUMN_STREAM_POPULAR, 1);
+                        movieValues.put(MoviesContract.MoviesEntry.COLUMN_STREAM_TOPRATED, 0);
+                        break;
+                    }
+                    case SYNC_TOPRATED: {
+                        movieValues.put(MoviesContract.MoviesEntry.COLUMN_STREAM_POPULAR, 0);
+                        movieValues.put(MoviesContract.MoviesEntry.COLUMN_STREAM_TOPRATED, 1);
+                        break;
+                    }
+                }
                 movieValues.put(MoviesContract.MoviesEntry.COLUMN_BOOKMARK, 0);
 
                 cVVector.add(movieValues);
@@ -374,6 +394,8 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
             movieValues.put(MoviesContract.MoviesEntry.COLUMN_ORIGINALTITLE, originalTitle);
             movieValues.put(MoviesContract.MoviesEntry.COLUMN_VOTEAVERAGE, voteAverage);
             movieValues.put(MoviesContract.MoviesEntry.COLUMN_OLDDATA, 0);
+            movieValues.put(MoviesContract.MoviesEntry.COLUMN_STREAM_POPULAR, 0);
+            movieValues.put(MoviesContract.MoviesEntry.COLUMN_STREAM_TOPRATED, 0);
             movieValues.put(MoviesContract.MoviesEntry.COLUMN_BOOKMARK, 0);
 
             getContext().getContentResolver().insert(MoviesContract.MoviesEntry.CONTENT_URI, movieValues);
@@ -384,7 +406,7 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
-    public void getVideosMovieDataFromJson(String imdbJsonStr, long movieId)
+    public void getVideosMovieDataFromJson(String imdbJsonStr, String movieId)
             throws JSONException {
 
         // These are the names of the JSON objects that need to be extracted.
@@ -437,7 +459,7 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
-    public void getReviewsMovieDataFromJson(String imdbJsonStr, long movieId)
+    public void getReviewsMovieDataFromJson(String imdbJsonStr, String movieId)
             throws JSONException {
 
         // These are the names of the JSON objects that need to be extracted.
@@ -567,12 +589,13 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
      * Helper method to schedule the sync adapter periodic execution
      */
     public static void configurePeriodicSync(Context context, int syncInterval, int flexTime) {
+        Account account = getSyncAccount(context);
         String authority = context.getString(R.string.content_authority);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             // we can enable inexact timers in our periodic sync
             SyncRequest request = new SyncRequest.Builder().
                     syncPeriodic(syncInterval, flexTime).
-                    setSyncAdapter(null, authority).
+                    setSyncAdapter(account, authority).
                     setExtras(new Bundle()).build();
             ContentResolver.requestSync(request);
         } else {
@@ -589,11 +612,50 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
         Bundle bundle = new Bundle();
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
-        ContentResolver.requestSync(null,
+        ContentResolver.requestSync(getSyncAccount(context),
                 context.getString(R.string.content_authority), bundle);
     }
 
-    public static void initializeSyncAdapter(Context context) {
+    /**
+     * Helper method to get the fake account to be used with SyncAdapter, or make a new one
+     * if the fake account doesn't exist yet.  If we make a new account, we call the
+     * onAccountCreated method so we can initialize things.
+     *
+     * @param context The context used to access the account service
+     * @return a fake account.
+     */
+    public static Account getSyncAccount(Context context) {
+        // Get an instance of the Android account manager
+        AccountManager accountManager =
+                (AccountManager) context.getSystemService(Context.ACCOUNT_SERVICE);
+
+        // Create the account type and default account
+        Account newAccount = new Account(
+                context.getString(R.string.app_name), context.getString(R.string.sync_account_type));
+
+        // If the password doesn't exist, the account doesn't exist
+        if ( null == accountManager.getPassword(newAccount) ) {
+
+        /*
+         * Add the account and account type, no password or user data
+         * If successful, return the Account object, otherwise report an error.
+         */
+            if (!accountManager.addAccountExplicitly(newAccount, "", null)) {
+                return null;
+            }
+            /*
+             * If you don't set android:syncable="true" in
+             * in your <provider> element in the manifest,
+             * then call ContentResolver.setIsSyncable(account, AUTHORITY, 1)
+             * here.
+             */
+
+            onAccountCreated(newAccount, context);
+        }
+        return newAccount;
+    }
+
+    private static void onAccountCreated(Account newAccount, Context context) {
         /*
          * Since we've created an account
          */
@@ -602,11 +664,16 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
         /*
          * Without calling setSyncAutomatically, our periodic sync will not be enabled.
          */
-        ContentResolver.setSyncAutomatically(null, context.getString(R.string.content_authority), true);
+        ContentResolver.setSyncAutomatically(newAccount, context.getString(R.string.content_authority), true);
 
         /*
          * Finally, let's do a sync to get things started
          */
         syncImmediately(context);
     }
+
+    public static void initializeSyncAdapter(Context context) {
+        getSyncAccount(context);
+    }
+
 }

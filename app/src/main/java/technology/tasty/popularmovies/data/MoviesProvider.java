@@ -20,7 +20,6 @@ public class MoviesProvider extends ContentProvider {
     private MoviesDbHelper mOpenHelper;
 
     static final int MOVIES = 100;
-    static final int MOVIE = 101;
     static final int VIDEOS = 200;
     static final int REVIEWS = 300;
 
@@ -116,26 +115,47 @@ public class MoviesProvider extends ContentProvider {
         switch (match) {
             case MOVIES: {
 
-                String movieId = (String) values.get(MoviesContract.MoviesEntry._ID);
+                String movieId = String.valueOf(values.get(MoviesContract.MoviesEntry._ID));
 
                 String[] projection = new String[]{
+                        MoviesContract.MoviesEntry.TABLE_NAME + "." + MoviesContract.MoviesEntry._ID,
+                        MoviesContract.MoviesEntry.TABLE_NAME + "." + MoviesContract.MoviesEntry.COLUMN_OLDDATA,
+                        MoviesContract.MoviesEntry.TABLE_NAME + "." + MoviesContract.MoviesEntry.COLUMN_STREAM_POPULAR,
+                        MoviesContract.MoviesEntry.TABLE_NAME + "." + MoviesContract.MoviesEntry.COLUMN_STREAM_TOPRATED,
                         MoviesContract.MoviesEntry.TABLE_NAME + "." + MoviesContract.MoviesEntry.COLUMN_BOOKMARK};
                 String selection = MoviesContract.MoviesEntry.TABLE_NAME + "." + MoviesContract.MoviesEntry._ID + " = ? ";
                 String[] selectionArgs = new String[]{movieId};
 
                 Cursor cursor = query(
                         uri,
-                        projection,
+                        null,
                         selection,
                         selectionArgs,
                         null);
 
+                long _id;
                 if (cursor.moveToFirst()) {
+
+                    if (cursor.getString(cursor.getColumnIndex(MoviesContract.MoviesEntry.COLUMN_OLDDATA)).equals("0")){
+                        if (values.get(MoviesContract.MoviesEntry.COLUMN_STREAM_POPULAR).equals("1")){
+                            values.remove(MoviesContract.MoviesEntry.COLUMN_STREAM_TOPRATED);
+                        } else {
+                            values.remove(MoviesContract.MoviesEntry.COLUMN_STREAM_POPULAR);
+                        }
+                    }
                     //To keep the bookmark
+                    values.remove(MoviesContract.MoviesEntry.COLUMN_BOOKMARK);
+                    _id = db.update(MoviesContract.MoviesEntry.TABLE_NAME, values, MoviesContract.MoviesEntry._ID + " = ?", new String[]{movieId});
+
+
+                    values.remove(MoviesContract.MoviesEntry._ID);
                     values.put(MoviesContract.MoviesEntry.COLUMN_BOOKMARK, cursor.getColumnIndex(MoviesContract.MoviesEntry.COLUMN_BOOKMARK));
+                    _id = db.update(MoviesContract.MoviesEntry.TABLE_NAME, values, MoviesContract.MoviesEntry._ID + " = ?", new String[]{movieId});
+
+                } else {
+                    _id = db.insert(MoviesContract.MoviesEntry.TABLE_NAME, null, values);
                 }
 
-                long _id = db.insert(MoviesContract.MoviesEntry.TABLE_NAME, null, values);
                 if ( _id > 0 )
                     returnUri = MoviesContract.MoviesEntry.buildMoviesUri(_id);
                 else
@@ -236,10 +256,54 @@ public class MoviesProvider extends ContentProvider {
                 returnCount = 0;
                 try {
                     for (ContentValues value : values) {
-                        long _id = db.insert(MoviesContract.MoviesEntry.TABLE_NAME, null, value);
+
+                        String movieId = String.valueOf(value.get(MoviesContract.MoviesEntry._ID));
+
+                        String[] projection = new String[]{
+                                MoviesContract.MoviesEntry.TABLE_NAME + "." + MoviesContract.MoviesEntry._ID,
+                                MoviesContract.MoviesEntry.TABLE_NAME + "." + MoviesContract.MoviesEntry.COLUMN_OLDDATA,
+                                MoviesContract.MoviesEntry.TABLE_NAME + "." + MoviesContract.MoviesEntry.COLUMN_STREAM_POPULAR,
+                                MoviesContract.MoviesEntry.TABLE_NAME + "." + MoviesContract.MoviesEntry.COLUMN_STREAM_TOPRATED,
+                                MoviesContract.MoviesEntry.TABLE_NAME + "." + MoviesContract.MoviesEntry.COLUMN_BOOKMARK};
+                        String selection = MoviesContract.MoviesEntry.TABLE_NAME + "." + MoviesContract.MoviesEntry._ID + " = ? ";
+                        String[] selectionArgs = new String[]{movieId};
+
+                        Cursor cursor = query(
+                                uri,
+                                null,
+                                selection,
+                                selectionArgs,
+                                null);
+
+                        long _id;
+                        if (cursor.moveToFirst()) {
+
+                            if (cursor.getString(cursor.getColumnIndex(MoviesContract.MoviesEntry.COLUMN_OLDDATA)).equals("0")){
+                                if (value.get(MoviesContract.MoviesEntry.COLUMN_STREAM_POPULAR).equals("1")){
+                                    value.remove(MoviesContract.MoviesEntry.COLUMN_STREAM_TOPRATED);
+                                } else {
+                                    value.remove(MoviesContract.MoviesEntry.COLUMN_STREAM_POPULAR);
+                                }
+                            }
+                            //To keep the bookmark
+                            value.remove(MoviesContract.MoviesEntry.COLUMN_BOOKMARK);
+                            _id = db.update(MoviesContract.MoviesEntry.TABLE_NAME, value, MoviesContract.MoviesEntry._ID + " = ?", new String[]{movieId});
+
+
+                            value.remove(MoviesContract.MoviesEntry._ID);
+                            value.put(MoviesContract.MoviesEntry.COLUMN_BOOKMARK, cursor.getColumnIndex(MoviesContract.MoviesEntry.COLUMN_BOOKMARK));
+                            _id = db.update(MoviesContract.MoviesEntry.TABLE_NAME, value, MoviesContract.MoviesEntry._ID + " = ?", new String[]{movieId});
+
+                        } else {
+                            _id = db.insert(MoviesContract.MoviesEntry.TABLE_NAME, null, value);
+                        }
+
                         if (_id != -1) {
                             returnCount++;
+                        } else {
+                            throw new android.database.SQLException("Failed to insert row into " + uri);
                         }
+                        cursor.close();
                     }
                     db.setTransactionSuccessful();
                 } finally {

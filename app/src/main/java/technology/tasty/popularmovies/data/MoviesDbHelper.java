@@ -30,12 +30,14 @@ public class MoviesDbHelper extends SQLiteOpenHelper {
                 MoviesContract.MoviesEntry.COLUMN_ORIGINALTITLE + " TEXT NOT NULL, " +
                 MoviesContract.MoviesEntry.COLUMN_POPULARITY + " REAL NOT NULL, " +
                 MoviesContract.MoviesEntry.COLUMN_VOTEAVERAGE + " REAL NOT NULL, " +
-                MoviesContract.MoviesEntry.COLUMN_OLDDATA + "INTEGER NOT NULL, " +
-                MoviesContract.MoviesEntry.COLUMN_BOOKMARK + "INTEGER NOT NULL, " +
+                MoviesContract.MoviesEntry.COLUMN_OLDDATA + " INTEGER NOT NULL, " +
+                MoviesContract.MoviesEntry.COLUMN_STREAM_POPULAR + " INTEGER NOT NULL, " +
+                MoviesContract.MoviesEntry.COLUMN_STREAM_TOPRATED + " INTEGER NOT NULL, " +
+                MoviesContract.MoviesEntry.COLUMN_BOOKMARK + " INTEGER NOT NULL, " +
 
                 // To assure the application have just the last update for a movie
                 // it's created a UNIQUE constraint with REPLACE strategy
-                " UNIQUE (" + MoviesContract.MoviesEntry._ID + ") ON CONFLICT REPLACE) " +
+                " UNIQUE (" + MoviesContract.MoviesEntry._ID + ") ON CONFLICT REPLACE " +
 
                 " );";
 
@@ -51,7 +53,7 @@ public class MoviesDbHelper extends SQLiteOpenHelper {
 
                 // To assure the application have just the last update for a movie
                 // it's created a UNIQUE constraint with REPLACE strategy
-                " UNIQUE (" + MoviesContract.VideosEntry._ID + ") ON CONFLICT REPLACE) " +
+                " UNIQUE (" + MoviesContract.VideosEntry._ID + ") ON CONFLICT REPLACE " +
 
                 " );";
 
@@ -66,7 +68,7 @@ public class MoviesDbHelper extends SQLiteOpenHelper {
 
                 // To assure the application have just the last update for a movie
                 // it's created a UNIQUE constraint with REPLACE strategy
-                " UNIQUE (" + MoviesContract.ReviewsEntry._ID + ") ON CONFLICT REPLACE) " +
+                " UNIQUE (" + MoviesContract.ReviewsEntry._ID + ") ON CONFLICT REPLACE " +
 
                 " );";
 

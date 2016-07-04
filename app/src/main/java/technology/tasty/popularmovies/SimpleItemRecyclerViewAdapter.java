@@ -1,9 +1,7 @@
 package technology.tasty.popularmovies;
 
 import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,8 +9,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
-
-import java.util.List;
 
 /**
  * Popular Movies
@@ -22,13 +18,25 @@ public class SimpleItemRecyclerViewAdapter
         extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {
 
     private final Context mContext;
-    private final List<Movie> mMovies;
+    private Cursor mCursorMovies;
     private final Boolean mTwoPane;
 
-    public SimpleItemRecyclerViewAdapter(Context context, List<Movie> movies, Boolean twoPane) {
+    public SimpleItemRecyclerViewAdapter(Context context, Cursor cursorMovies, Boolean twoPane) {
         mContext = context;
-        mMovies = movies;
+        mCursorMovies = cursorMovies;
         mTwoPane = twoPane;
+    }
+
+    public Cursor swapCursor(Cursor newCursor) {
+        if (newCursor == mCursorMovies) {
+            return null;
+        }
+        Cursor oldCursor = mCursorMovies;
+        mCursorMovies = newCursor;
+        if (newCursor != null) {
+            notifyDataSetChanged();
+        }
+        return oldCursor;
     }
 
     @Override
@@ -40,13 +48,13 @@ public class SimpleItemRecyclerViewAdapter
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
-        holder.mMovie = mMovies.get(position);
+        mCursorMovies.moveToPosition(position);
         Picasso.with(mContext)
-                .load("http://image.tmdb.org/t/p/w185/" + holder.mMovie.getPosterPath())
+                .load("http://image.tmdb.org/t/p/w185/" + mCursorMovies.getString(MovieListActivity.COL_MOVIE_POSTERPATH))
                 .fit().centerCrop()
                 .into(holder.mPosterView);
-        holder.mPosterView.setContentDescription(holder.mMovie.getOriginalTitle());
-
+        holder.mPosterView.setContentDescription(mCursorMovies.getString(MovieListActivity.COL_MOVIE_ORIGINALTITLE));
+/*
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -66,18 +74,20 @@ public class SimpleItemRecyclerViewAdapter
                     context.startActivity(intent);
                 }
             }
-        });
+        });*/
     }
 
     @Override
     public int getItemCount() {
-        return mMovies.size();
+        if (mCursorMovies != null){
+            return mCursorMovies.getCount();
+        }
+        return 0;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         public final View mView;
         public final ImageView mPosterView;
-        public Movie mMovie;
 
         public ViewHolder(View view) {
             super(view);
