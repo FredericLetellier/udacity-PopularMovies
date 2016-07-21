@@ -1,8 +1,12 @@
 package technology.tasty.popularmovies;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,19 +52,24 @@ public class SimpleItemRecyclerViewAdapter
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
+        holder.mView.setTag(position);
+
         mCursorMovies.moveToPosition(position);
         Picasso.with(mContext)
                 .load("http://image.tmdb.org/t/p/w185/" + mCursorMovies.getString(MovieListActivity.COL_MOVIE_POSTERPATH))
                 .fit().centerCrop()
                 .into(holder.mPosterView);
         holder.mPosterView.setContentDescription(mCursorMovies.getString(MovieListActivity.COL_MOVIE_ORIGINALTITLE));
-/*
+
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                int position = (int) v.getTag();
+                mCursorMovies.moveToPosition(position);
+
                 if (mTwoPane) {
                     Bundle arguments = new Bundle();
-                    arguments.putParcelable(MovieDetailFragment.ARG_MOVIE, holder.mMovie);
+                    arguments.putSerializable(MovieDetailFragment.ARG_MOVIE, mCursorMovies.getString(MovieListActivity.COL_MOVIE_ID));
                     MovieDetailFragment fragment = new MovieDetailFragment();
                     fragment.setArguments(arguments);
                     ((FragmentActivity)mContext).getSupportFragmentManager().beginTransaction()
@@ -69,12 +78,12 @@ public class SimpleItemRecyclerViewAdapter
                 } else {
                     Context context = v.getContext();
                     Intent intent = new Intent(context, MovieDetailActivity.class);
-                    intent.putExtra(MovieDetailFragment.ARG_MOVIE, holder.mMovie);
+                    intent.putExtra(MovieDetailFragment.ARG_MOVIE, mCursorMovies.getString(MovieListActivity.COL_MOVIE_ID));
 
                     context.startActivity(intent);
                 }
             }
-        });*/
+        });
     }
 
     @Override
