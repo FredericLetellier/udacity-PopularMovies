@@ -1,12 +1,15 @@
 package technology.tasty.popularmovies;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
@@ -37,6 +40,8 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
      */
     private String mMovieId;
 
+    private Cursor movieData;
+
     private static final int MOVIE_LOADER = 0;
 
     private static final String[] MOVIE_COLUMNS = {
@@ -61,6 +66,7 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
     static final int COL_MOVIE_BOOKMARK = 7;
 
     private CollapsingToolbarLayout appBarLayout;
+    private FloatingActionButton favButton;
     private View rootView;
 
     /**
@@ -90,6 +96,13 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
         Activity activity = this.getActivity();
         appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
 
+        activity.findViewById(R.id.fab).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                updateFab();
+            }
+        });
+
         rootView = inflater.inflate(R.layout.movie_detail, container, false);
 
         return rootView;
@@ -112,6 +125,8 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        movieData = data;
+
         Activity activity = this.getActivity();
         appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
 
@@ -125,6 +140,8 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
                         .into((ImageView) activity.findViewById(R.id.background_toolbar));
             }
 
+            displayFab(data.getString(MovieDetailFragment.COL_MOVIE_BOOKMARK));
+
             // Show the dummy content as text in a TextView.
             ((TextView) rootView.findViewById(R.id.movie_date_duration)).setText(data.getString(MovieDetailFragment.COL_MOVIE_RELEASEDATE));
             String voteaverage = String.valueOf(data.getString(MovieDetailFragment.COL_MOVIE_VOTEAVERAGE))+"/10";
@@ -136,5 +153,44 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
+    }
+
+    public void displayFab(String displayOn){
+        if (appBarLayout != null){
+            favButton = (FloatingActionButton) this.getActivity().findViewById(R.id.fab);
+            if (displayOn.equals("1")){
+                favButton.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_star_black_24dp));
+            } else {
+                favButton.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_star_border_black_24dp));
+            }
+        }
+    }
+
+    public void updateFab(){
+        if (movieData.moveToFirst()){
+            String favState = movieData.getString(MovieDetailFragment.COL_MOVIE_BOOKMARK);
+            String newFavState;
+
+            if (favState.equals("1")){
+                newFavState = "0";
+            } else {
+                newFavState = "1";
+            }
+
+            Uri uri = MoviesContract.MoviesEntry.CONTENT_URI;
+            String selection = MoviesContract.MoviesEntry._ID + " = ?";
+            String[] selectionArgs = new String[] {movieData.getString(MovieDetailFragment.COL_MOVIE_ID)};
+
+            ContentValues movieValues = new ContentValues();
+            movieValues.put(MoviesContract.MoviesEntry.COLUMN_BOOKMARK, newFavState);
+
+            getContext().getContentResolver().update(
+                    uri,
+                    movieValues,
+                    selection,
+                    selectionArgs);
+
+            displayFab(newFavState);
+        }
     }
 }

@@ -91,12 +91,12 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
 
         /*Mark all movies as old data*/
-        ContentValues movieValues = new ContentValues();
-        movieValues.put(MoviesContract.MoviesEntry.COLUMN_OLDDATA, 1);
+        ContentValues movieValues1 = new ContentValues();
+        movieValues1.put(MoviesContract.MoviesEntry.COLUMN_OLDDATA, 1);
 
         getContext().getContentResolver().update(
                 MoviesContract.MoviesEntry.CONTENT_URI,
-                movieValues,
+                movieValues1,
                 null,
                 null);
 
@@ -104,6 +104,23 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
         /*If contains Bookmark movies, data are replaced, and mark as not old data*/
         ImdbSync(SYNC_POPULAR, null, 1);
         ImdbSync(SYNC_TOPRATED, null, 1);
+
+        /*Delete all movies without bookmark flag, and with olddata flag*/
+        getContext().getContentResolver().delete(
+                MoviesContract.MoviesEntry.CONTENT_URI,
+                MoviesContract.MoviesEntry.COLUMN_BOOKMARK + " = ? AND " + MoviesContract.MoviesEntry.COLUMN_OLDDATA + " = ?",
+                new String[] {"0", "1"});
+
+        /*Update all movies with bookmark flag and with olddata flag, as not top_rated and not popular*/
+        ContentValues movieValues2 = new ContentValues();
+        movieValues2.put(MoviesContract.MoviesEntry.COLUMN_STREAM_POPULAR, 0);
+        movieValues2.put(MoviesContract.MoviesEntry.COLUMN_STREAM_TOPRATED, 0);
+
+        getContext().getContentResolver().update(
+                MoviesContract.MoviesEntry.CONTENT_URI,
+                movieValues2,
+                MoviesContract.MoviesEntry.COLUMN_BOOKMARK + " = ? AND " + MoviesContract.MoviesEntry.COLUMN_OLDDATA + " = ?",
+                new String[] {"1", "1"});
 
         /*Delete all reviews and videos*/
         getContext().getContentResolver().delete(
@@ -115,12 +132,6 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
                 MoviesContract.ReviewsEntry.CONTENT_URI,
                 null,
                 null);
-
-        /*Delete all movies without bookmark flag, and with olddata flag*/
-        getContext().getContentResolver().delete(
-                MoviesContract.MoviesEntry.CONTENT_URI,
-                MoviesContract.MoviesEntry.COLUMN_BOOKMARK + " = ? AND " + MoviesContract.MoviesEntry.COLUMN_OLDDATA + " = ?",
-                new String[] {"0", "1"});
 
         /*Notify user with actual popular movies*/
         notifyMovies();

@@ -55,7 +55,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical|start"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/ic_star_border_black_24dp"
         app:layout_anchor="@+id/movie_detail_container"
         app:layout_anchorGravity="top|end" />
 
