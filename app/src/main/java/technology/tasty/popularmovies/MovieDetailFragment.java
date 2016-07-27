@@ -13,6 +13,8 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -67,6 +69,43 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
     static final int COL_MOVIE_VOTEAVERAGE = 6;
     static final int COL_MOVIE_BOOKMARK = 7;
 
+    private static final int VIDEO_LOADER = 1;
+
+    private static final String[] VIDEO_COLUMNS = {
+
+            MoviesContract.VideosEntry.TABLE_NAME + "." + MoviesContract.VideosEntry._ID,
+            MoviesContract.VideosEntry.COLUMN_MOVIE_KEY,
+            MoviesContract.VideosEntry.COLUMN_NAME,
+            MoviesContract.VideosEntry.COLUMN_SITE,
+            MoviesContract.VideosEntry.COLUMN_SITE_KEY
+    };
+
+    static final int COL_VIDEO_ID = 0;
+    static final int COL_VIDEO_MOVIE_KEY = 1;
+    static final int COL_VIDEO_NAME = 2;
+    static final int COL_VIDEO_SITE = 3;
+    static final int COL_VIDEO_SITE_KEY = 4;
+
+    private static final int REVIEW_LOADER = 2;
+
+    private static final String[] REVIEW_COLUMNS = {
+
+            MoviesContract.ReviewsEntry.TABLE_NAME + "." + MoviesContract.ReviewsEntry._ID,
+            MoviesContract.ReviewsEntry.COLUMN_MOVIE_KEY,
+            MoviesContract.ReviewsEntry.COLUMN_AUTHOR,
+            MoviesContract.ReviewsEntry.COLUMN_CONTENT
+    };
+
+    static final int COL_REVIEW_ID = 0;
+    static final int COL_REVIEW_MOVIE_KEY = 1;
+    static final int COL_REVIEW_AUTHOR = 2;
+    static final int COL_REVIEW_CONTENT = 3;
+
+    private RecyclerView videoRecyclerView;
+    private VideoRecyclerViewAdapter videoRecyclerViewAdapter;
+    private RecyclerView reviewRecyclerView;
+    private ReviewRecyclerViewAdapter reviewRecyclerViewAdapter;
+
     private CollapsingToolbarLayout appBarLayout;
     private FloatingActionButton favButton;
     private View rootView;
@@ -87,10 +126,13 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
             mMovieId = (String) getArguments().getSerializable(ARG_MOVIE);
-            getLoaderManager().initLoader(MOVIE_LOADER, null, this);
 
             SyncData syncData = new SyncData();
             syncData.execute();
+
+            getLoaderManager().initLoader(MOVIE_LOADER, null, this);
+            getLoaderManager().initLoader(VIDEO_LOADER, null, this);
+            getLoaderManager().initLoader(REVIEW_LOADER, null, this);
         }
     }
 
@@ -110,54 +152,127 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
 
         rootView = inflater.inflate(R.layout.movie_detail, container, false);
 
+        videoRecyclerView = (RecyclerView) rootView.findViewById(R.id.video_list);
+        assert videoRecyclerView != null;
+        videoRecyclerView.setLayoutManager(new LinearLayoutManager(videoRecyclerView.getContext()));
+        videoRecyclerViewAdapter = new VideoRecyclerViewAdapter(getContext(), null);
+        videoRecyclerView.setAdapter(videoRecyclerViewAdapter);
+
+        reviewRecyclerView = (RecyclerView) rootView.findViewById(R.id.review_list);
+        assert reviewRecyclerView != null;
+        reviewRecyclerView.setLayoutManager(new LinearLayoutManager(videoRecyclerView.getContext()));
+        reviewRecyclerViewAdapter = new ReviewRecyclerViewAdapter(getContext(), null);
+        reviewRecyclerView.setAdapter(reviewRecyclerViewAdapter);
+
         return rootView;
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+        CursorLoader loader;
+        Uri uri;
+        String selection;
+        String[] selectionArgs;
 
-        Uri uri = MoviesContract.MoviesEntry.CONTENT_URI;
-        String selection = MoviesContract.MoviesEntry._ID + " = ?";
-        String[] selectionArgs = new String[] {mMovieId};
+        switch (i) {
+            case MOVIE_LOADER:
+                uri = MoviesContract.MoviesEntry.CONTENT_URI;
+                selection = MoviesContract.MoviesEntry._ID + " = ?";
+                selectionArgs = new String[] {mMovieId};
 
-        return new CursorLoader(getContext(),
-                uri,
-                MOVIE_COLUMNS,
-                selection,
-                selectionArgs,
-                null);
+                loader = new CursorLoader(getContext(),
+                        uri,
+                        MOVIE_COLUMNS,
+                        selection,
+                        selectionArgs,
+                        null);
+                break;
+            case VIDEO_LOADER:
+                uri = MoviesContract.VideosEntry.CONTENT_URI;
+                selection = MoviesContract.VideosEntry.COLUMN_MOVIE_KEY + " = ?";
+                selectionArgs = new String[] {mMovieId};
+
+                loader = new CursorLoader(getContext(),
+                        uri,
+                        VIDEO_COLUMNS,
+                        selection,
+                        selectionArgs,
+                        null);
+                break;
+            case REVIEW_LOADER:
+                uri = MoviesContract.ReviewsEntry.CONTENT_URI;
+                selection = MoviesContract.ReviewsEntry.COLUMN_MOVIE_KEY + " = ?";
+                selectionArgs = new String[] {mMovieId};
+
+                loader = new CursorLoader(getContext(),
+                        uri,
+                        REVIEW_COLUMNS,
+                        selection,
+                        selectionArgs,
+                        null);
+                break;
+            default:
+                loader = null;
+                break;
+        }
+
+        return loader;
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        movieData = data;
 
-        Activity activity = this.getActivity();
-        appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
+        switch (loader.getId()) {
+            case MOVIE_LOADER:
+                movieData = data;
 
-        if (data.moveToFirst()) {
+                Activity activity = this.getActivity();
+                appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
 
-            if (appBarLayout != null) {
-                appBarLayout.setTitle(data.getString(MovieDetailFragment.COL_MOVIE_ORIGINALTITLE));
-                Picasso.with(getContext())
-                        .load("http://image.tmdb.org/t/p/w342/" + data.getString(MovieDetailFragment.COL_MOVIE_POSTERPATH))
-                        .fit().centerCrop()
-                        .into((ImageView) activity.findViewById(R.id.background_toolbar));
-            }
+                if (data.moveToFirst()) {
 
-            displayFab(data.getString(MovieDetailFragment.COL_MOVIE_BOOKMARK));
+                    if (appBarLayout != null) {
+                        appBarLayout.setTitle(data.getString(MovieDetailFragment.COL_MOVIE_ORIGINALTITLE));
+                        Picasso.with(getContext())
+                                .load("http://image.tmdb.org/t/p/w342/" + data.getString(MovieDetailFragment.COL_MOVIE_POSTERPATH))
+                                .fit().centerCrop()
+                                .into((ImageView) activity.findViewById(R.id.background_toolbar));
+                    }
 
-            // Show the dummy content as text in a TextView.
-            ((TextView) rootView.findViewById(R.id.movie_date_duration)).setText(data.getString(MovieDetailFragment.COL_MOVIE_RELEASEDATE));
-            String voteaverage = String.valueOf(data.getString(MovieDetailFragment.COL_MOVIE_VOTEAVERAGE))+"/10";
-            ((TextView) rootView.findViewById(R.id.movie_voteaverage)).setText(voteaverage);
-            ((TextView) rootView.findViewById(R.id.movie_detail)).setText(data.getString(MovieDetailFragment.COL_MOVIE_OVERVIEW));
+                    displayFab(data.getString(MovieDetailFragment.COL_MOVIE_BOOKMARK));
+
+                    // Show the dummy content as text in a TextView.
+                    ((TextView) rootView.findViewById(R.id.movie_date_duration)).setText(data.getString(MovieDetailFragment.COL_MOVIE_RELEASEDATE));
+                    String voteaverage = String.valueOf(data.getString(MovieDetailFragment.COL_MOVIE_VOTEAVERAGE))+"/10";
+                    ((TextView) rootView.findViewById(R.id.movie_voteaverage)).setText(voteaverage);
+                    ((TextView) rootView.findViewById(R.id.movie_detail)).setText(data.getString(MovieDetailFragment.COL_MOVIE_OVERVIEW));
+                }
+                break;
+            case VIDEO_LOADER:
+                videoRecyclerViewAdapter.swapCursor(data);
+                break;
+            case REVIEW_LOADER:
+                reviewRecyclerViewAdapter.swapCursor(data);
+                break;
+            default:
+                break;
         }
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-
+        switch (loader.getId()) {
+            case MOVIE_LOADER:
+                break;
+            case VIDEO_LOADER:
+                videoRecyclerViewAdapter.swapCursor(null);
+                break;
+            case REVIEW_LOADER:
+                reviewRecyclerViewAdapter.swapCursor(null);
+                break;
+            default:
+                break;
+        }
     }
 
     public void displayFab(String displayOn){

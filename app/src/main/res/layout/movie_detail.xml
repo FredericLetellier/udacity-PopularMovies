@@ -1,7 +1,8 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:layout_margin="15dp"
     tools:context="technology.tasty.popularmovies.MovieDetailFragment">
 
@@ -10,26 +11,56 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         style="?android:attr/textAppearanceMedium"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"/>
+        android:layout_marginTop="10dp"/>
 
     <TextView
         android:id="@+id/movie_voteaverage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         style="?android:attr/textAppearanceMedium"
-        android:layout_below="@+id/movie_date_duration"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"/>
+        android:layout_marginTop="10dp"/>
 
     <TextView
         android:id="@+id/movie_detail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         style="?android:attr/textAppearanceSmall"
-        android:layout_below="@+id/movie_voteaverage"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"/>
+        android:layout_marginTop="10dp"/>
 
-</RelativeLayout>
+    <TextView
+        android:id="@+id/video_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="?android:attr/textAppearanceLarge"
+        android:text="@string/trailers"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="15dp" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/video_list"
+        android:name="technology.tasty.popularmovies.VideoList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context="technology.tasty.popularmovies.MovieDetailFragment"
+        tools:listitem="@layout/video_list_content" />
+
+    <TextView
+        android:id="@+id/review_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="?android:attr/textAppearanceLarge"
+        android:text="@string/reviews"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="15dp"/>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/review_list"
+        android:name="technology.tasty.popularmovies.ReviewList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context="technology.tasty.popularmovies.MovieDetailFragment"
+        tools:listitem="@layout/review_list_content"
+        android:layout_marginBottom="30dp"/>
+
+</LinearLayout>
+

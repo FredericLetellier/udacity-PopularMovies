@@ -308,7 +308,7 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
                 popularity = movieIMDB.getDouble(IMDB_MOVIE_POPULARITY);
                 voteAverage = movieIMDB.getDouble(IMDB_MOVIE_VOTEAVERAGE);
 
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                SimpleDateFormat format = new SimpleDateFormat("EEE, MMM d, ''yy", Locale.getDefault());
                 try {
                     releaseDate = format.parse(sReleaseDate);
                 } catch (ParseException e) {
@@ -388,7 +388,7 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
             originalTitle = movieIMDB.getString(IMDB_MOVIE_ORIGINALTITLE);
             voteAverage = movieIMDB.getDouble(IMDB_MOVIE_VOTEAVERAGE);
 
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            SimpleDateFormat format = new SimpleDateFormat("EEE, MMM d, ''yy", Locale.getDefault());
             try {
                 releaseDate = format.parse(sReleaseDate);
             } catch (ParseException e) {
@@ -487,13 +487,13 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
             Vector<ContentValues> cVVector = new Vector<>(reviewArray.length());
 
             for(int i = 0; i < reviewArray.length(); i++) {
-                Long reviewId;
+                String reviewId;
                 String author;
                 String content;
 
                 // Get the JSON object representing the movie
                 JSONObject movieIMDB = reviewArray.getJSONObject(i);
-                reviewId = movieIMDB.getLong(IMDB_REVIEW_ID);
+                reviewId = movieIMDB.getString(IMDB_REVIEW_ID);
                 author = movieIMDB.getString(IMDB_REVIEW_AUTHOR);
                 content = movieIMDB.getString(IMDB_REVIEW_CONTENT);
 

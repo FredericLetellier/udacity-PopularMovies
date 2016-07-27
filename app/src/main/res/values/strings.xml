@@ -29,5 +29,7 @@
 
     <!-- Notification Format -->
     <string name="format_notification">Discover the most popular movie: <xliff:g id="title">%1$s</xliff:g></string>
+    <string name="trailers">Trailers</string>
+    <string name="reviews">Reviews</string>
 
 </resources>
