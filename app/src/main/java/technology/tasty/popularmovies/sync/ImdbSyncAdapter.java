@@ -435,14 +435,14 @@ public class ImdbSyncAdapter extends AbstractThreadedSyncAdapter {
             Vector<ContentValues> cVVector = new Vector<>(videoArray.length());
 
             for(int i = 0; i < videoArray.length(); i++) {
-                Long videoId;
+                String videoId;
                 String name;
                 String site;
                 String key;
 
                 // Get the JSON object representing the movie
                 JSONObject movieIMDB = videoArray.getJSONObject(i);
-                videoId = movieIMDB.getLong(IMDB_VIDEO_ID);
+                videoId = movieIMDB.getString(IMDB_VIDEO_ID);
                 name = movieIMDB.getString(IMDB_VIDEO_NAME);
                 site = movieIMDB.getString(IMDB_VIDEO_SITE);
                 key = movieIMDB.getString(IMDB_VIDEO_KEY);

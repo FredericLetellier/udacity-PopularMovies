@@ -42,7 +42,7 @@ public class MoviesDbHelper extends SQLiteOpenHelper {
                 " );";
 
         final String SQL_CREATE_VIDEOS_TABLE = "CREATE TABLE " + MoviesContract.VideosEntry.TABLE_NAME + " (" +
-                MoviesContract.VideosEntry._ID + " INTEGER PRIMARY KEY," +
+                MoviesContract.VideosEntry._ID + " STRING PRIMARY KEY," +
                 MoviesContract.VideosEntry.COLUMN_MOVIE_KEY + " INTEGER NOT NULL, " +
                 MoviesContract.VideosEntry.COLUMN_NAME + " TEXT NOT NULL, " +
                 MoviesContract.VideosEntry.COLUMN_SITE + " TEXT NOT NULL, " +
@@ -58,7 +58,7 @@ public class MoviesDbHelper extends SQLiteOpenHelper {
                 " );";
 
         final String SQL_CREATE_REVIEWS_TABLE = "CREATE TABLE " + MoviesContract.ReviewsEntry.TABLE_NAME + " (" +
-                MoviesContract.ReviewsEntry._ID + " INTEGER PRIMARY KEY," +
+                MoviesContract.ReviewsEntry._ID + " STRING PRIMARY KEY," +
                 MoviesContract.ReviewsEntry.COLUMN_MOVIE_KEY + " INTEGER NOT NULL, " +
                 MoviesContract.ReviewsEntry.COLUMN_AUTHOR + " TEXT NOT NULL, " +
                 MoviesContract.ReviewsEntry.COLUMN_CONTENT + " TEXT NOT NULL, " +

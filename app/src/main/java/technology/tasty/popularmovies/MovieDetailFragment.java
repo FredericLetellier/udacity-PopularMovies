@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -21,6 +22,7 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 import technology.tasty.popularmovies.data.MoviesContract;
+import technology.tasty.popularmovies.sync.ImdbSyncAdapter;
 
 /**
  * A fragment representing a single Movie detail screen.
@@ -86,6 +88,9 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
             // to load content from a content provider.
             mMovieId = (String) getArguments().getSerializable(ARG_MOVIE);
             getLoaderManager().initLoader(MOVIE_LOADER, null, this);
+
+            SyncData syncData = new SyncData();
+            syncData.execute();
         }
     }
 
@@ -191,6 +196,19 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
                     selectionArgs);
 
             displayFab(newFavState);
+        }
+    }
+
+    public class SyncData extends AsyncTask<String, Void, String[]> {
+
+        @Override
+        protected String[] doInBackground(String... params) {
+
+            ImdbSyncAdapter imdbSyncAdapter = new ImdbSyncAdapter(getContext(), true);
+            imdbSyncAdapter.ImdbSync(ImdbSyncAdapter.SYNC_MOVIE, mMovieId, 1);
+            imdbSyncAdapter.ImdbSync(ImdbSyncAdapter.SYNC_MOVIE_REVIEWS, mMovieId, 1);
+            imdbSyncAdapter.ImdbSync(ImdbSyncAdapter.SYNC_MOVIE_VIDEOS, mMovieId, 1);
+            return null;
         }
     }
 }
