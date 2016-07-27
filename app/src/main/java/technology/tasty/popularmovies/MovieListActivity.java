@@ -91,29 +91,6 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
         }
 
     }
-/*
-    private void updateMovies() {
-        Context context = getApplicationContext();
-
-        if (Utility.isOnline(context)){
-            FetchIMDBTask imdbTask = new FetchIMDBTask();
-            imdbTask.delegate = this;
-            imdbTask.execute(sortOrder);
-        }else{
-            CharSequence text = "No Internet Connection";
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
-        }
-    }
-
-    //this override the implemented method from asyncTask
-    public void processFinish(List<Movie> result) {
-        //Here you will receive the result fired from async class
-        //of onPostExecute(result) method.
-        recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(getApplicationContext(), result, mTwoPane));
-    }
-*/
 
     @Override
     public void onStart() {
@@ -144,6 +121,9 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
             return true;
         }else if (id == R.id.menuSortHighestRated) {
             sortMovies(MoviesContract.MoviesEntry.COLUMN_VOTEAVERAGE);
+            return true;
+        }else if (id == R.id.menuSortFavorites) {
+            sortMovies(MoviesContract.MoviesEntry.COLUMN_BOOKMARK);
             return true;
         }else if (id == R.id.action_settings) {
                 startActivity(new Intent(this, SettingsActivity.class));
@@ -176,6 +156,11 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
             }
             case MoviesContract.MoviesEntry.COLUMN_VOTEAVERAGE: {
                 selection = MoviesContract.MoviesEntry.COLUMN_STREAM_TOPRATED + " = ?";
+                selectionArgs = new String[] {"1"};
+                break;
+            }
+            case MoviesContract.MoviesEntry.COLUMN_BOOKMARK: {
+                selection = MoviesContract.MoviesEntry.COLUMN_BOOKMARK + " = ?";
                 selectionArgs = new String[] {"1"};
                 break;
             }
