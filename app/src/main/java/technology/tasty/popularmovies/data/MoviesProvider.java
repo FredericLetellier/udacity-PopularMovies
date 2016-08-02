@@ -143,13 +143,9 @@ public class MoviesProvider extends ContentProvider {
                             values.remove(MoviesContract.MoviesEntry.COLUMN_STREAM_POPULAR);
                         }
                     }
-                    //To keep the bookmark
-                    values.remove(MoviesContract.MoviesEntry.COLUMN_BOOKMARK);
-                    _id = db.update(MoviesContract.MoviesEntry.TABLE_NAME, values, MoviesContract.MoviesEntry._ID + " = ?", new String[]{movieId});
-
 
                     values.remove(MoviesContract.MoviesEntry._ID);
-                    values.put(MoviesContract.MoviesEntry.COLUMN_BOOKMARK, cursor.getColumnIndex(MoviesContract.MoviesEntry.COLUMN_BOOKMARK));
+                    values.put(MoviesContract.MoviesEntry.COLUMN_BOOKMARK, cursor.getString(cursor.getColumnIndex(MoviesContract.MoviesEntry.COLUMN_BOOKMARK)));
                     _id = db.update(MoviesContract.MoviesEntry.TABLE_NAME, values, MoviesContract.MoviesEntry._ID + " = ?", new String[]{movieId});
 
                 } else {

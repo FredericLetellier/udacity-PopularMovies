@@ -227,17 +227,19 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
                 movieData = data;
 
                 Activity activity = this.getActivity();
-                appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
 
                 if (data.moveToFirst()) {
 
-                    if (appBarLayout != null) {
-                        appBarLayout.setTitle(data.getString(MovieDetailFragment.COL_MOVIE_ORIGINALTITLE));
-                        Picasso.with(getContext())
-                                .load("http://image.tmdb.org/t/p/w342/" + data.getString(MovieDetailFragment.COL_MOVIE_POSTERPATH))
-                                .fit().centerCrop()
-                                .into((ImageView) activity.findViewById(R.id.background_toolbar));
-                    }
+                    activity.findViewById(R.id.coordinatorLayout).setVisibility(View.VISIBLE);
+
+                    appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
+                    appBarLayout.setTitle(data.getString(MovieDetailFragment.COL_MOVIE_ORIGINALTITLE));
+                    Picasso.with(getContext())
+                            .load("http://image.tmdb.org/t/p/w342/" + data.getString(MovieDetailFragment.COL_MOVIE_POSTERPATH))
+                            .fit().centerCrop()
+                            .placeholder(R.drawable.ic_movie_filter_grey_24dp)
+                            .error(R.drawable.ic_error_outline_grey_24dp)
+                            .into((ImageView) activity.findViewById(R.id.background_toolbar));
 
                     displayFab(data.getString(MovieDetailFragment.COL_MOVIE_BOOKMARK));
 
@@ -246,7 +248,11 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
                     String voteaverage = String.valueOf(data.getString(MovieDetailFragment.COL_MOVIE_VOTEAVERAGE))+"/10";
                     ((TextView) rootView.findViewById(R.id.movie_voteaverage)).setText(voteaverage);
                     ((TextView) rootView.findViewById(R.id.movie_detail)).setText(data.getString(MovieDetailFragment.COL_MOVIE_OVERVIEW));
+
+                }else{
+                    activity.findViewById(R.id.coordinatorLayout).setVisibility(View.INVISIBLE);
                 }
+
                 break;
             case VIDEO_LOADER:
                 videoRecyclerViewAdapter.swapCursor(data);
@@ -263,6 +269,7 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
     public void onLoaderReset(Loader<Cursor> loader) {
         switch (loader.getId()) {
             case MOVIE_LOADER:
+                movieData = null;
                 break;
             case VIDEO_LOADER:
                 videoRecyclerViewAdapter.swapCursor(null);
@@ -276,25 +283,25 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
     }
 
     public void displayFab(String displayOn){
-        if (appBarLayout != null){
-            favButton = (FloatingActionButton) this.getActivity().findViewById(R.id.fab);
-            if (displayOn.equals("1")){
-                favButton.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_star_black_24dp));
-            } else {
-                favButton.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_star_border_black_24dp));
-            }
+        favButton = (FloatingActionButton) this.getActivity().findViewById(R.id.fab);
+        if (displayOn.equals("1")){
+            favButton.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_star_black_24dp));
+        } else {
+            favButton.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_star_border_black_24dp));
         }
     }
 
     public void updateFab(){
         if (movieData.moveToFirst()){
-            String favState = movieData.getString(MovieDetailFragment.COL_MOVIE_BOOKMARK);
-            String newFavState;
+            int favState = movieData.getInt(MovieDetailFragment.COL_MOVIE_BOOKMARK);
+            int newFavState;
 
-            if (favState.equals("1")){
-                newFavState = "0";
+            if (favState == 1){
+                newFavState = 0;
+            } else if (favState == 0) {
+                newFavState = 1;
             } else {
-                newFavState = "1";
+                return;
             }
 
             Uri uri = MoviesContract.MoviesEntry.CONTENT_URI;
@@ -310,7 +317,7 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
                     selection,
                     selectionArgs);
 
-            displayFab(newFavState);
+            /*displayFab(newFavState);*/
         }
     }
 

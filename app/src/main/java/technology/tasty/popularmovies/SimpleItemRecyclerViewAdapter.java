@@ -3,10 +3,7 @@ package technology.tasty.popularmovies;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +17,17 @@ import com.squareup.picasso.Picasso;
  */
 public class SimpleItemRecyclerViewAdapter
         extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {
+
+
+    public interface MyCallback {
+        void onItemClicked(String movieId);
+    }
+
+    private MyCallback listener;
+
+    public void setOnItemClickListener(MyCallback callback){
+        listener = callback;
+    }
 
     private final Context mContext;
     private Cursor mCursorMovies;
@@ -58,6 +66,8 @@ public class SimpleItemRecyclerViewAdapter
         Picasso.with(mContext)
                 .load("http://image.tmdb.org/t/p/w185/" + mCursorMovies.getString(MovieListActivity.COL_MOVIE_POSTERPATH))
                 .fit().centerCrop()
+                .placeholder(R.drawable.ic_movie_filter_grey_24dp)
+                .error(R.drawable.ic_error_outline_grey_24dp)
                 .into(holder.mPosterView);
         holder.mPosterView.setContentDescription(mCursorMovies.getString(MovieListActivity.COL_MOVIE_ORIGINALTITLE));
 
@@ -68,13 +78,10 @@ public class SimpleItemRecyclerViewAdapter
                 mCursorMovies.moveToPosition(position);
 
                 if (mTwoPane) {
-                    Bundle arguments = new Bundle();
-                    arguments.putSerializable(MovieDetailFragment.ARG_MOVIE, mCursorMovies.getString(MovieListActivity.COL_MOVIE_ID));
-                    MovieDetailFragment fragment = new MovieDetailFragment();
-                    fragment.setArguments(arguments);
-                    ((FragmentActivity)mContext).getSupportFragmentManager().beginTransaction()
-                            .replace(R.id.movie_detail_container, fragment)
-                            .commit();
+                    if (listener != null) {
+                        final String movieId = mCursorMovies.getString(MovieListActivity.COL_MOVIE_ID);
+                        listener.onItemClicked(movieId);
+                    }
                 } else {
                     Context context = v.getContext();
                     Intent intent = new Intent(context, MovieDetailActivity.class);

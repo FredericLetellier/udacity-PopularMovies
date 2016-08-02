@@ -13,6 +13,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import technology.tasty.popularmovies.data.MoviesContract;
@@ -26,7 +27,7 @@ import technology.tasty.popularmovies.sync.ImdbSyncAdapter;
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class MovieListActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+public class MovieListActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>, SimpleItemRecyclerViewAdapter.MyCallback {
 
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
@@ -66,13 +67,6 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
             toolbar.setTitle(getTitle());
         }
 
-        recyclerView = (RecyclerView) findViewById(R.id.movie_list);
-        assert recyclerView != null;
-        final int columns = getResources().getInteger(R.integer.grid_columns);
-        recyclerView.setLayoutManager(new GridLayoutManager(recyclerView.getContext(), columns));
-        simpleItemRecyclerViewAdapter = new SimpleItemRecyclerViewAdapter(getApplicationContext(), null, mTwoPane);
-        recyclerView.setAdapter(simpleItemRecyclerViewAdapter);
-
         if (findViewById(R.id.movie_detail_container) != null) {
             // The detail container view will be present only in the
             // large-screen layouts (res/values-w900dp).
@@ -80,6 +74,15 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
             // activity should be in two-pane mode.
             mTwoPane = true;
         }
+
+        recyclerView = (RecyclerView) findViewById(R.id.movie_list);
+        assert recyclerView != null;
+        final int columns = getResources().getInteger(R.integer.grid_columns);
+        recyclerView.setLayoutManager(new GridLayoutManager(recyclerView.getContext(), columns));
+        simpleItemRecyclerViewAdapter = new SimpleItemRecyclerViewAdapter(getApplicationContext(), null, mTwoPane);
+        recyclerView.setAdapter(simpleItemRecyclerViewAdapter);
+
+        simpleItemRecyclerViewAdapter.setOnItemClickListener(this);
 
         if (Utility.isOnline(this)){
             ImdbSyncAdapter.initializeSyncAdapter(this);
@@ -134,6 +137,10 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
 
     private void sortMovies(String newSort){
         if (newSort != sortOrder){
+            if (mTwoPane){
+                this.findViewById(R.id.coordinatorLayout).setVisibility(View.INVISIBLE);
+            }
+
             sortOrder = newSort;
             getSupportLoaderManager().restartLoader(MOVIE_LOADER, null, this);
         }
@@ -184,4 +191,14 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
         simpleItemRecyclerViewAdapter.swapCursor(null);
     }
 
+    @Override
+    public void onItemClicked(String movieId) {
+        Bundle arguments = new Bundle();
+        arguments.putSerializable(MovieDetailFragment.ARG_MOVIE, movieId);
+        MovieDetailFragment fragment = new MovieDetailFragment();
+        fragment.setArguments(arguments);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.movie_detail_container, fragment)
+                .commit();
+    }
 }
